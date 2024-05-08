@@ -1,0 +1,41 @@
+/* global.css */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  a {
+    color: #61dafb;
+    text-decoration: none; /* Removes underline */
+  }
+  
+  a:hover {
+    color: #21a1f1; /* Lighter blue for hover state */
+  }
+  
+  button {
+    background-color: #282c34;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #3a3f4b; /* Darker background on hover */
+  }
+  
+  input, select, textarea {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+  }
+  

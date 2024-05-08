@@ -1,0 +1,99 @@
+/* App.css - Updated with new global styles */
+
+/* Reset margin and padding to remove browser default styles */
+body, h1, h2, h3, h4, h5, h6, p, ul, li, figure, figcaption, blockquote, dl, dd {
+  margin: 0;
+  padding: 0;
+}
+
+/* Set base font and background colors */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #1a1a1a; /* Dark background for the app */
+  color: #ffffff;
+  line-height: 1.6; /* Improve readability */
+}
+
+/* Styling links */
+a {
+  color: #61dafb;
+  text-decoration: none; /* Removes underline */
+}
+
+a:hover {
+  color: #21a1f1; /* Lighter blue for hover state */
+}
+
+/* General button styling */
+button {
+  background-color: #282c34;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #3a3f4b; /* Darker background on hover */
+}
+
+/* Input fields styling */
+input, select, textarea {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+} */
+
+
+/* global.css */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+a {
+  color: #61dafb;
+  text-decoration: none; /* Removes underline */
+}
+
+a:hover {
+  color: #21a1f1; /* Lighter blue for hover state */
+}
+
+button {
+  background-color: #282c34;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #3a3f4b; /* Darker background on hover */
+}
+
+input, select, textarea {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}

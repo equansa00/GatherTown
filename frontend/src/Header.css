@@ -1,0 +1,41 @@
+/* Styles for the Header component, inspired by a professional ticket-selling platform */
+header {
+    background-color: #1a1a1a; /* Dark background for the header */
+    color: #ffffff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  header nav {
+    width: 50%;
+  }
+  
+  header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: space-around;
+    padding: 0;
+    margin: 0;
+  }
+  
+  header nav ul li a {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 0.5rem 1rem;
+    transition: color 0.3s ease-in-out;
+  }
+  
+  header nav ul li a:hover, header nav ul li a:focus {
+    color: #f0f0f0; /* Brighter color for hover and focus */
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+
+  
