@@ -1,4 +1,3 @@
-//home/equansa00/Desktop/GatherTown/controllers/eventController.js
 // controllers/eventController.js
 const Event = require('../models/Event');
 const { validationResult } = require('express-validator');
@@ -27,22 +26,37 @@ exports.getEvents = async (req, res) => {
 
 // Create a new event
 exports.createEvent = async (req, res) => {
+  // Check for validation errors first
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  if (!req.user || !req.user.id) {
-    return handleUnauthorized(res, 'User not authenticated');
+  // Extract fields from req.body
+  const { title, description, date, location, category, time } = req.body;
+  if (!title || !description || !date || !location || !category || !time) {
+    return res.status(400).json({ error: 'Missing one or more required fields' });
   }
 
-  const { title, description, date, location, category } = req.body;
-  const eventData = { title, description, date, location, category, creator: req.user.id };
+  const eventData = {
+    title, 
+    description, 
+    date, 
+    location, 
+    category, 
+    time, 
+    creator: req.user.id 
+  }; 
+
+  console.log('Request Body:', req.body); // Log the entire request body
+  console.log('Event Data:', eventData);
 
   try {
     const event = await Event.create(eventData);
+    console.log("Event created with ID:", event._id);  // Log the ID for verification
     res.status(201).json({ message: 'Event created successfully', event });
   } catch (error) {
+    console.error('Error creating event:', error);
     handleServerError(res, error.message);
   }
 };
@@ -69,6 +83,7 @@ exports.updateEvent = async (req, res) => {
 // Delete an event
 exports.deleteEvent = async (req, res) => {
   try {
+    // First, check if the event exists and the user is authorized to delete it
     const event = await Event.findById(req.params.id);
     if (!event) {
       return handleNotFound(res, 'Event not found');
@@ -78,8 +93,9 @@ exports.deleteEvent = async (req, res) => {
       return handleUnauthorized(res, 'User not authorized');
     }
 
-    await event.remove();
-    res.json({ msg: 'Event removed' });
+    // Use findByIdAndDelete to remove the event
+    await Event.findByIdAndDelete(req.params.id);
+    res.status(200).json({ msg: 'Event removed' });
   } catch (err) {
     handleServerError(res, err.message);
   }

@@ -1,4 +1,3 @@
-//home/equansa00/Desktop/GatherTown/routes/eventRoutes.js
 const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
@@ -17,7 +16,8 @@ const createEventValidation = [
 
 // Event routes using authentication and validation middleware
 router.post('/', authMiddleware, createEventValidation, eventController.createEvent);
-router.put('/events/:id', authMiddleware, eventController.updateEvent);
-router.delete('/events/:id', authMiddleware, eventController.deleteEvent);
+router.get('/', authMiddleware, eventController.getEvents); // Added this line to handle GET requests
+router.put('/:id', authMiddleware, eventController.updateEvent); // Removed 'events' from the path as it's redundant
+router.delete('/:id', authMiddleware, eventController.deleteEvent); // Removed 'events' from the path as it's redundant
 
 module.exports = router;

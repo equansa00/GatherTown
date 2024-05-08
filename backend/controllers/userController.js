@@ -1,4 +1,3 @@
-//home/equansa00/Desktop/GatherTown/controllers/userController.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -7,10 +6,7 @@ const { sendEmail } = require('../utils/sendEmail');
 const { authenticateUser, listAllHashes } = require('../utils/authUtils');
 
 
-// Function to register a new user
 // Register a new user
-// User Controller - Register User
-
 exports.registerUser = async (req, res) => {
     const { email, password, username } = req.body;
     console.log(`Attempting to register user: ${email}`);
@@ -30,7 +26,7 @@ exports.registerUser = async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            verified: true  // Set user as verified for now
+            verified: true  
         });
 
         await user.save();

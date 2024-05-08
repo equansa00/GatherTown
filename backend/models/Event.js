@@ -1,4 +1,3 @@
-//home/equansa00/Desktop/GatherTown/models/Event.js
 // Importing required modules
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
@@ -21,6 +20,7 @@ const eventSchema = new mongoose.Schema({
       validator: (value) => isAfter(value, startOfDay(new Date())),
       message: 'Event date must be in the future',
     },
+    index: true, // Add index for faster querying
   },
   location: {
     type: {
@@ -31,19 +31,31 @@ const eventSchema = new mongoose.Schema({
     coordinates: {
       type: [Number],
       required: [true, 'Coordinates are required'],
+      validate: {
+        validator: ([lng, lat]) => lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90,
+        message: 'Coordinates must be valid longitude and latitude values',
+      },
     }
   },
   category: {
     type: String,
     required: [true, 'Category is required'],
-    enum: ['Music', 'Sports', 'Art', 'Food', 'Tech', 'Other'],
+    enum: ['Music', 'Sports', 'Art', 'Food', 'Tech', 'Recreation', 'Other'], // Example categories
+    index: true, // Add index for better performance
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Creator is required'],
+  },
+  time: {
+    type: String,
+    required: [true, 'Time is required'],
   }
 });
+
+// Ensure the model is properly recompiled
+mongoose.model('Event', eventSchema);
 
 eventSchema.pre('save', function (next) {
   if (process.env.NODE_ENV !== 'production') {

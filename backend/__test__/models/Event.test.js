@@ -41,6 +41,7 @@ describe('Event Model', () => {
           },
           category: 'Other', // Match one of the enum values
           creator: new mongoose.Types.ObjectId(),
+          time: '12:00'
         };
       
         console.log('Event data:', eventData);
@@ -64,30 +65,27 @@ describe('Event Model', () => {
     
 // Test case for ensuring required fields are validated
 it('should not create an event without required fields', async () => {
-    console.log('Testing event creation without required fields...');
-    try {
-      // Attempt to create an event without required fields
-      await Event.create({
-        title: 'Test Event 2', // Ensure unique title if it's required to be unique
-        description: 'This is another test event',
-        date: new Date('2024-06-15T18:00:00Z'), // Ensure unique date if it's required to be unique
-        location: { // Properly include location field
-          type: 'Point',
-          coordinates: [15, 25], // Ensure unique coordinates if they're required to be unique
-        },
-        category: 'Tech', // Change category if 'Other' is not allowed or if it's required to be unique
-        creator: new mongoose.Types.ObjectId(), // Ensure unique creator if it's required to be unique
-      });
-    } catch (error) {
-      console.log('Error caught:', error);
-      // Assert that the error is a validation error and contains errors for all required fields
-      expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-      expect(error.errors).toHaveProperty('title');
-      expect(error.errors).toHaveProperty('description');
-      expect(error.errors).toHaveProperty('date');
-      expect(error.errors).toHaveProperty('location'); // Adjusted to check location property
-      expect(error.errors).toHaveProperty('category');
-      expect(error.errors).toHaveProperty('creator');
-    }
-  });
+  console.log('Testing event creation without required fields...');
+  try {
+    // Attempt to create an event without required fields
+    await Event.create({
+      // Omit 'title' and 'time' to trigger validation errors
+      description: 'This is another test event',
+      date: new Date('2024-06-15T18:00:00Z'),
+      location: {
+        type: 'Point',
+        coordinates: [15, 25],
+      },
+      category: 'Tech',
+      creator: new mongoose.Types.ObjectId(),
+    });
+  } catch (error) {
+    console.log('Error caught:', error);
+    // Assert that the error is a validation error and contains errors for all required fields
+    expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(error.errors).toHaveProperty('title'); // This field is missing and should trigger an error
+    expect(error.errors).toHaveProperty('time');  // This field is missing and should trigger an error
+  }
+});
+
 });
