@@ -1,6 +1,6 @@
 // frontend/src/features/events/SubmitEvent.js
 import React, { useState } from 'react';
-import { submitEvent } from '../../api/eventsService';
+import { submitEvent } from '../../api/eventsService'; // Ensure the path is correct
 
 const SubmitEvent = () => {
   const [title, setTitle] = useState('');
@@ -11,7 +11,16 @@ const SubmitEvent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const eventData = { title, description, date, location, category };
+    const eventData = {
+      title,
+      description,
+      date,
+      location: {
+        type: 'Point',
+        coordinates: location.split(',').map(Number),
+      },
+      category,
+    };
 
     try {
       const response = await submitEvent(eventData);
@@ -26,23 +35,23 @@ const SubmitEvent = () => {
     <form onSubmit={handleSubmit}>
       <label>
         Title:
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
       </label>
       <label>
         Description:
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} required></textarea>
       </label>
       <label>
         Date:
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       </label>
       <label>
-        Location:
-        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} />
+        Location (lat,lng):
+        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required />
       </label>
       <label>
         Category:
-        <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} />
+        <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required />
       </label>
       <button type="submit">Submit Event</button>
     </form>
@@ -50,3 +59,4 @@ const SubmitEvent = () => {
 };
 
 export default SubmitEvent;
+

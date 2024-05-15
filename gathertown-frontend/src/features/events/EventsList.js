@@ -1,6 +1,6 @@
 // frontend/src/features/events/EventsList.js
 import React, { useState, useEffect } from 'react';
-import { fetchEvents } from '../../api/eventsService';
+import { fetchEvents } from '../../api/eventsService'; // Ensure the path is correct
 
 function EventsList() {
   const [events, setEvents] = useState([]);
@@ -8,11 +8,11 @@ function EventsList() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setIsLoading(true);
-    const fetchAllEvents = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const eventsData = await fetchEvents();
-        setEvents(eventsData);
+        const data = await fetchEvents();
+        setEvents(data);
       } catch (error) {
         setError(error);
       } finally {
@@ -20,7 +20,7 @@ function EventsList() {
       }
     };
 
-    fetchAllEvents();
+    fetchData();
   }, []);
 
   return (
