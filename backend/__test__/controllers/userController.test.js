@@ -15,24 +15,55 @@ jest.mock('jsonwebtoken');
 describe('User Controller', () => {
     // Test suite for registerUser function
     describe('registerUser', () => {
-        // Test case: Should create a new user
         it('should create a new user', async () => {
-            // Mock request and response
             const req = { body: { username: 'testuser', email: 'test@example.com', password: 'password123' } };
-            const res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
+            const res = {
+                json: jest.fn(),
+                status: jest.fn().mockReturnThis(),
+                send: jest.fn() // Ensure this is mocked if used in error handling
+            };
             
-            // Mock User.findOne to return null (no user found)
             User.findOne.mockResolvedValue(null);
-            // Mock User.prototype.save to return a new user
-            User.prototype.save.mockResolvedValue({ id: "1", ...req.body });
-
-            // Call the function with the mock request and response
+            User.prototype.save.mockResolvedValue({
+                _id: "1",
+                username: req.body.username,
+                email: req.body.email
+            });
+            
             await registerUser(req, res);
-
-            // Expectations: Should return status 201 and a JSON response
+            
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith(expect.any(Object));
         });
+
+        
+        // Test case: Should create a new user
+        
+        // it('should create a new user', async () => {
+        //     // Mock request and response
+        //     const req = { body: { username: 'testuser', email: 'test@example.com', password: 'password123' } };
+        //     const res = {
+        //         json: jest.fn(),
+        //         status: jest.fn().mockReturnThis(),
+        //         send: jest.fn() // Mocking send to ensure full coverage of response methods
+        //     };
+            
+        //     // Mock User.findOne to assert no existing user
+        //     User.findOne.mockResolvedValue(null);
+
+        //     // Mock User.prototype.save to simulate user creation
+        //     User.prototype.save.mockResolvedValue({
+        //         id: "1",
+        //         ...req.body
+        //     });
+
+        //     // Call the registerUser function with mocked request and response
+        //     await registerUser(req, res);
+
+        //     // Assertions to verify that response status 201 and json with user object are returned
+        //     expect(res.status).toHaveBeenCalledWith(201);
+        //     expect(res.json).toHaveBeenCalledWith(expect.any(Object));
+        // });
 
         // Test case: Should not create a user if email already exists
         it('should not create a user if email already exists', async () => {

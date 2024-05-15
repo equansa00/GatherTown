@@ -1,23 +1,36 @@
 const express = require('express');
-const { body } = require('express-validator');
-const router = express.Router();
+const { check, validationResult } = require('express-validator');
 const eventController = require('../controllers/eventController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Define validation rules for creating events
-const createEventValidation = [
-    body('title').not().isEmpty().withMessage('Title cannot be empty'),
-    body('description').not().isEmpty().withMessage('Description cannot be empty'),
-    body('date').isISO8601().withMessage('Date must be a valid ISO 8601 date'),
-    body('location.type').equals('Point').withMessage('Location type must be "Point"'),
-    body('location.coordinates').isArray().withMessage('Location coordinates must be an array'),
-    body('category').not().isEmpty().withMessage('Category cannot be empty')
+const router = express.Router();
+
+// Validation rules for creating and updating an event
+const eventValidationRules = [
+    check('title', 'Title is required').not().isEmpty(),
+    check('description', 'Description must not be empty').not().isEmpty(),
+    check('date', 'Please include a valid date').isISO8601(),
+    check('location.coordinates', 'Location coordinates must be provided and be an array').isArray(),
+    check('location.coordinates.*', 'Location coordinates must be numbers').isFloat(),
+    check('location.type', 'Location type must be "Point"').equals('Point'),
+    check('category', 'Category is required').not().isEmpty(),
 ];
 
-// Event routes using authentication and validation middleware
-router.post('/', authMiddleware, createEventValidation, eventController.createEvent);
-router.get('/', authMiddleware, eventController.getEvents); // Added this line to handle GET requests
-router.put('/:id', authMiddleware, eventController.updateEvent); // Removed 'events' from the path as it's redundant
-router.delete('/:id', authMiddleware, eventController.deleteEvent); // Removed 'events' from the path as it's redundant
+// Middleware to check validation results
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+};
+
+// Routes
+router.get('/', eventController.getEvents);
+router.post('/', [authMiddleware, eventValidationRules, validate], eventController.createEvent);
+router.put('/:id', [authMiddleware, eventValidationRules, validate], eventController.updateEvent);
+router.delete('/:id', authMiddleware, eventController.deleteEvent);
+router.post('/:id/rsvp', authMiddleware, eventController.rsvpToEvent);
+router.get('/:id', eventController.getEventById);
 
 module.exports = router;

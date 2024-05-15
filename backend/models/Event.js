@@ -72,4 +72,7 @@ eventSchema.statics.findUpcomingEvents = async function () {
 };
 
 const Event = mongoose.model('Event', eventSchema);
+
+console.log('Event model created');
+
 module.exports = Event;

@@ -1,31 +1,27 @@
-// Import necessary libraries and modules
 const request = require('supertest');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const app = require('../server');
-const Event = require('../models/Event'); 
-const User = require('../models/User'); 
+const Event = require('../models/Event');
+const User = require('../models/User');
 
 describe('Event API', () => {
-    let token, event; 
+    let token, event;
 
     beforeAll(async () => {
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-    
+        await mongoose.connect(process.env.MONGO_URI);
+
         // Clear existing users to ensure the environment is ready for tests
         await User.deleteMany({});
         await Event.deleteMany({});
-        
+
         const user = await User.create({
             username: 'testUser',
             email: 'test@example.com',
             password: 'password123', // Assume this is hashed according to your User model requirements
             verified: true
         });
-    
+
         // Generate a JWT token for the created user
         token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
@@ -46,6 +42,16 @@ describe('Event API', () => {
     });
 
     describe('POST /api/events', () => {
+        describe('GET /api/events', () => {
+            it('GET /api/events - should retrieve all events', async () => {
+                const response = await request(app)
+                    .get('/api/events')
+                    .set('Authorization', `Bearer ${token}`);
+                expect(response.status).toBe(200);
+                expect(response.body.length).toBeGreaterThan(0); // Ensure events are retrieved
+            });
+        });
+
         it('should create a new event', async () => {
             const eventData = {
                 title: "Community Picnic",
@@ -54,7 +60,7 @@ describe('Event API', () => {
                     type: "Point",
                     coordinates: [-73.968285, 40.785091]  // Example coordinates
                 },
-                category: "Recreation", 
+                category: "Recreation",
                 date: "2024-06-12",
                 time: "12:00"
             };
@@ -83,48 +89,56 @@ describe('Event API', () => {
         });
     });
 
-    describe('GET /api/events', () => {
-        it('GET /api/events - should retrieve all events', async () => {
-            const response = await request(app)
-                .get('/api/events')
-                .set('Authorization', `Bearer ${token}`);
-            expect(response.status).toBe(200);
-        });
-    });
-
     describe('PUT /api/events/:id', () => {
         it('should update an existing event', async () => {
             const updatedData = {
                 title: 'Updated Event Title',
                 description: 'Updated event description.',
-                time: '18:00'
+                location: {
+                    type: "Point",
+                    coordinates: [-73.968285, 40.785091]  // Example coordinates
+                },
+                category: "Recreation",
+                date: "2024-06-12",
+                time: "18:00"
             };
-    
+
             const response = await request(app)
                 .put(`/api/events/${event._id}`)
                 .set('Authorization', `Bearer ${token}`)
                 .send(updatedData);
-    
+
+            // Log the response body for debugging
+            console.log('Event update response:', response.body);
+
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty('_id');
             expect(response.body.title).toEqual(updatedData.title);
             expect(response.body.description).toEqual(updatedData.description);
-            expect(response.body.time).toEqual(updatedData.time);
+            expect(new Date(response.body.date)).toEqual(new Date(updatedData.date));  // Ensure dates match
+            expect(response.body.time).toEqual(updatedData.time);  // Ensure times match
         });
     });
-    
+
     describe('DELETE /api/events/:id', () => {
         it('should delete an existing event', async () => {
             const response = await request(app)
                 .delete(`/api/events/${event._id}`)
                 .set('Authorization', `Bearer ${token}`);
-    
+
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty('msg', 'Event removed');
-    
+
             const deletedEvent = await Event.findById(event._id);
             expect(deletedEvent).toBeNull(); // Check if the event has been successfully removed
         });
     });
 });
+
+
+
+
+
+
+
 

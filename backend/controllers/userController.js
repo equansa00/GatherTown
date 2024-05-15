@@ -1,44 +1,118 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const crypto = require('crypto');
-const { sendEmail } = require('../utils/sendEmail');
-const { authenticateUser, listAllHashes } = require('../utils/authUtils');
+const { authenticateUser } = require('../utils/authUtils');
 
-
-// Register a new user
-exports.registerUser = async (req, res) => {
+const generateToken = (userId) => {
+    return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  };
+  
+  exports.registerUser = async (req, res) => {
     const { email, password, username } = req.body;
-    console.log(`Attempting to register user: ${email}`);
-
+    console.log(`Attempting to register user: ${JSON.stringify(req.body)}`);
+  
     try {
-        let user = await User.findOne({ email });
-        if (user) {
-            console.log(`User already exists with email: ${email}`);
-            return res.status(409).json({ msg: 'Email already exists' });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create user and set verified to true
-        user = new User({
-            username,
-            email,
-            password: hashedPassword,
-            verified: true  
-        });
-
-        await user.save();
-        console.log(`New user registered successfully: ${email}`);
-
-        const token = jwt.sign({ user: { id: user.id } }, process.env.JWT_SECRET, { expiresIn: 3600 });
-        res.status(201).json({ user: user, token: token });
+      let user = await User.findOne({ email });
+      if (user) {
+        console.log(`User already exists with email: ${email}`);
+        return res.status(409).json({ msg: 'Email already exists' });
+      }
+  
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      console.log(`Hashed password: ${hashedPassword}`);
+  
+      user = new User({
+        username,
+        email,
+        password: hashedPassword,
+        verified: true
+      });
+  
+      const savedUser = await user.save();
+      console.log(`New user registered successfully: ${email}`);
+  
+      const token = generateToken(savedUser._id.toString());
+      console.log('Token generated:', token);
+  
+      res.status(201).json({ user: savedUser, token });
     } catch (err) {
-        console.error('Registration error:', err.message);
-        res.status(500).send('Server error');
+      console.error('Registration error:', err);
+      res.status(500).send('Server error');
     }
-};
+  };
+// exports.registerUser = async (req, res) => {
+//     const { email, password, username } = req.body;
+//     console.log(`Attempting to register user: ${email}`);
+
+//     try {
+//         let user = await User.findOne({ email });
+//         if (user) {
+//             console.log(`User already exists with email: ${email}`);
+//             return res.status(409).json({ msg: 'Email already exists' });
+//         }
+
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPassword = await bcrypt.hash(password, salt);
+
+//         user = new User({
+//             username,
+//             email,
+//             password: hashedPassword,
+//             verified: true
+//         });
+
+//         const savedUser = await user.save();
+//         console.log(`New user registered successfully: ${email}`);
+
+//         if (!savedUser._id) {
+//             console.error('Failed to retrieve user ID from saved user');
+//             return res.status(500).send('Server error during registration');
+//         }
+
+//         const token = jwt.sign({ id: savedUser._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
+//         console.log('Token generated:', token);
+//         res.status(201).json({ user: savedUser, token: token });
+//     } catch (err) {
+//         console.error('Registration error:', err);
+//         res.status(500).send('Server error');
+//     }
+// };
+
+
+// exports.registerUser = async (req, res) => {
+//     const { email, password, username } = req.body;
+//     console.log(`Attempting to register user: ${email}`);
+
+//     try {
+//         let user = await User.findOne({ email });
+//         if (user) {
+//             console.log(`User already exists with email: ${email}`);
+//             return res.status(409).json({ msg: 'Email already exists' });
+//         }
+
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPassword = await bcrypt.hash(password, salt);
+
+//         // Create user and set verified to true
+//         user = new User({
+//             username,
+//             email,
+//             password: hashedPassword,
+//             verified: true  
+//         });
+
+//         await user.save();
+//         console.log(`New user registered successfully: ${email}`);
+
+//         const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
+//         console.log('Token generated:', token);
+//         res.status(201).json({ user: user, token: token });
+//     } catch (err) {
+//         console.error('Registration error:', err.message);
+//         res.status(500).send('Server error');
+//     }
+// };
 
 
 // Function to log in a user
@@ -47,18 +121,18 @@ exports.loginUser = async (req, res) => {
     console.log(`Login request received: ${email}`);
     
     try {
-        const authResult = await authenticateUser(email, password);
-        
-        if (authResult.success) {
-            res.status(200).json({ token: authResult.token });
-        } else {
-            res.status(401).json({ message: authResult.message });
-        }
+      const authResult = await authenticateUser(email, password);
+      
+      if (authResult.success) {
+        res.status(200).json({ token: authResult.token });
+      } else {
+        res.status(401).json({ message: authResult.message });
+      }
     } catch (error) {
-        console.error('Auth error:', error);
-        res.status(500).json({ message: 'Server error' });
+      console.error('Auth error:', error);
+      res.status(500).json({ message: 'Server error' });
     }
-};
+  };
 
 exports.listAllUserHashes = async (req, res) => {
     await listAllHashes(); // Logs all users' email-hash pairs to the console

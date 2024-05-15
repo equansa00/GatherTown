@@ -1,4 +1,7 @@
+//backend/server.js
 require('dotenv').config();
+const cors = require('cors');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -9,10 +12,17 @@ const app = express();
 const { connectDB } = require('./db');
 const jwt = require('jsonwebtoken');
 const { google } = require('googleapis');
+const handleErrors = require('./middleware/errorHandlers');
+
 
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(cors({
+    origin: 'http://localhost:3000', // Ensure this matches your frontend URL
+    credentials: true, // This allows cookies and headers to be included in requests
+}));
 
 // Middleware to log all requests
 app.use((req, res, next) => {
@@ -38,6 +48,7 @@ console.log('Setting up routes...');
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
+app.use(handleErrors);
 
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(
@@ -69,6 +80,7 @@ if (process.env.NODE_ENV !== 'test') {
         console.log(`Server is running on http://localhost:${PORT}`);
     });
 }
+
 
 module.exports = app;
 

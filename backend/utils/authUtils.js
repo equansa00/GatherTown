@@ -9,7 +9,6 @@ const { connectDB } = require('../db');
 const dbURI = process.env.MONGO_URI;
 const jwtSecret = process.env.JWT_SECRET;
 
-
 async function authenticateUser(email, password) {
     console.log('Starting authentication process for user:', email);
     try {
@@ -42,9 +41,10 @@ async function authenticateUser(email, password) {
         }
 
         console.log('Generating JWT token...');
-        const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
         console.log(`JWT generated successfully for ${user.email}: ${token}`);
-        
+
         console.log('Returning result...');
         return { success: true, token };
 
@@ -53,6 +53,33 @@ async function authenticateUser(email, password) {
         return { success: false, message: 'Server error' };
     }
 }
+
+// Function to list all user email-password pairs
+async function listAllHashes() {
+    try {
+        console.log('Connecting to MongoDB...');
+        await connectDB(); 
+        console.log('MongoDB connected.');
+
+        console.log('Fetching all users...');
+        const users = await User.find({}, 'email password'); // Only get the email and password fields
+        if (users.length === 0) {
+            console.log('No users found in the database.');
+        } else {
+            users.forEach((user, index) => {
+                console.log(`User ${index + 1}: Email: ${user.email}, Password Hash: ${user.password}`);
+            });
+        }
+    } catch (error) {
+        console.error('Error listing all hashes:', error);
+    }
+}
+
+module.exports = { authenticateUser, listAllHashes };
+
+
+
+
 
 
 // //old authenticateUser function
@@ -94,26 +121,3 @@ async function authenticateUser(email, password) {
 //         return { success: false, message: 'Server error' };
 //     }
 // }
-
-// Function to list all user email-password pairs
-async function listAllHashes() {
-    try {
-        console.log('Connecting to MongoDB...');
-        await connectDB(); 
-        console.log('MongoDB connected.');
-
-        console.log('Fetching all users...');
-        const users = await User.find({}, 'email password'); // Only get the email and password fields
-        if (users.length === 0) {
-            console.log('No users found in the database.');
-        } else {
-            users.forEach((user, index) => {
-                console.log(`User ${index + 1}: Email: ${user.email}, Password Hash: ${user.password}`);
-            });
-        }
-    } catch (error) {
-        console.error('Error listing all hashes:', error);
-    }
-}
-
-module.exports = { authenticateUser, listAllHashes };
