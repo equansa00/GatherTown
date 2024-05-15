@@ -1,5 +1,6 @@
-import axios from 'axios';
+// frontend/src/features/events/EventsList.js
 import React, { useState, useEffect } from 'react';
+import { fetchEvents } from '../../api/eventsService';
 
 function EventsList() {
   const [events, setEvents] = useState([]);
@@ -8,29 +9,18 @@ function EventsList() {
 
   useEffect(() => {
     setIsLoading(true);
-    const fetchEvents = async () => {
+    const fetchAllEvents = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        }
-        const response = await axios.get('http://localhost:5000/api/events');
-        console.log("Fetched events data:", response.data);
-        if (Array.isArray(response.data)) {
-          setEvents(response.data);
-        } else {
-          console.error("Expected an array of events, but got:", response.data);
-          setEvents([]);
-        }
+        const eventsData = await fetchEvents();
+        setEvents(eventsData);
       } catch (error) {
-        console.error("Error fetching events:", error);
         setError(error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchEvents();
+    fetchAllEvents();
   }, []);
 
   return (
@@ -38,7 +28,14 @@ function EventsList() {
       {isLoading && <p>Loading events...</p>}
       {error && <p>Error: {error.message}</p>}
       {!isLoading && !error && events.map(event => (
-        <div key={event._id}>{event.title}</div>
+        <div key={event._id}>
+          <h3>{event.title}</h3>
+          <p>{event.description}</p>
+          <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+          <p>Location: {event.location.coordinates.join(', ')}</p>
+          <p>Category: {event.category}</p>
+          <p>Time: {event.time}</p>
+        </div>
       ))}
     </div>
   );

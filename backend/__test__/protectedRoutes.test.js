@@ -1,3 +1,4 @@
+//backend/__test__/protectedRoutes.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../server'); // Adjust the path to where your Express app is exported

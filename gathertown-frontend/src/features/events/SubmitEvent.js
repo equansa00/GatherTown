@@ -1,3 +1,4 @@
+// frontend/src/features/events/SubmitEvent.js
 import React, { useState } from 'react';
 import { submitEvent } from '../../api/eventsService';
 
