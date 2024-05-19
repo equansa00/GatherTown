@@ -1,21 +1,50 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/events';
+const API_URL = '/api/events';
 
+const getAuthHeader = () => {
+  const token = localStorage.getItem('token');
+  return { 'Authorization': `Bearer ${token}` };
+};
 
 export const fetchEvents = async () => {
   try {
-    const response = await axios.get(API_URL);
-    return response.data;
+    const response = await fetch('http://localhost:5000/api/events', {
+      headers: getAuthHeader()
+    });
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return await response.json();
   } catch (error) {
     console.error('Error fetching events:', error);
-    throw error;
+    return [];
+  }
+};
+
+export const addEvent = async (eventData) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/events', {
+      method: 'POST',
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(eventData)
+    });
+    if (!response.ok) {
+      throw new Error('Failed to add event');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error adding event:', error);
+    return null;
   }
 };
 
 export const getEventDetails = async (id) => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const response = await axios.get(`${API_URL}/${id}`, getAuthHeader());
     return response.data;
   } catch (error) {
     console.error('Error fetching event details:', error);
@@ -25,7 +54,7 @@ export const getEventDetails = async (id) => {
 
 export const submitEvent = async (eventData) => {
   try {
-    const response = await axios.post(API_URL, eventData);
+    const response = await axios.post(API_URL, eventData, getAuthHeader());
     return response.data;
   } catch (error) {
     console.error('Error submitting event:', error);

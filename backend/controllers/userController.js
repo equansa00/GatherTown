@@ -1,138 +1,89 @@
+//backend/controllers/userController.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { authenticateUser } = require('../utils/authUtils');
+const crypto = require('crypto');
+const { sendEmail } = require('../utils/sendEmail');
+const { authenticateUser, listAllHashes } = require('../utils/authUtils');
 
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  };
-  
-  exports.registerUser = async (req, res) => {
-    const { email, password, username } = req.body;
-    console.log(`Attempting to register user: ${JSON.stringify(req.body)}`);
-  
+};
+
+exports.registerUser = async (req, res) => {
+    const { username, email, password, firstName, lastName } = req.body;
+
     try {
-      let user = await User.findOne({ email });
-      if (user) {
-        console.log(`User already exists with email: ${email}`);
-        return res.status(409).json({ msg: 'Email already exists' });
-      }
-  
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      console.log(`Hashed password: ${hashedPassword}`);
-  
-      user = new User({
-        username,
-        email,
-        password: hashedPassword,
-        verified: true
-      });
-  
-      const savedUser = await user.save();
-      console.log(`New user registered successfully: ${email}`);
-  
-      const token = generateToken(savedUser._id.toString());
-      console.log('Token generated:', token);
-  
-      res.status(201).json({ user: savedUser, token });
+        // Check if email or username already exists in the database
+        let userByEmail = await User.findOne({ email });
+        let userByUsername = await User.findOne({ username });
+
+        if (userByEmail) {
+            return res.status(409).json({ msg: 'Email already exists' });
+        }
+
+        if (userByUsername) {
+            return res.status(409).json({ msg: 'Username already exists' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = new User({
+            username,
+            email,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            verified: true
+        });
+
+        const savedUser = await user.save();
+        const token = generateToken(savedUser._id.toString());
+
+        res.status(201).json({ user: savedUser, token });
     } catch (err) {
-      console.error('Registration error:', err);
-      res.status(500).send('Server error');
+        console.error('Registration error:', err);
+        res.status(500).send('Server error');
     }
-  };
-// exports.registerUser = async (req, res) => {
-//     const { email, password, username } = req.body;
-//     console.log(`Attempting to register user: ${email}`);
-
-//     try {
-//         let user = await User.findOne({ email });
-//         if (user) {
-//             console.log(`User already exists with email: ${email}`);
-//             return res.status(409).json({ msg: 'Email already exists' });
-//         }
-
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         user = new User({
-//             username,
-//             email,
-//             password: hashedPassword,
-//             verified: true
-//         });
-
-//         const savedUser = await user.save();
-//         console.log(`New user registered successfully: ${email}`);
-
-//         if (!savedUser._id) {
-//             console.error('Failed to retrieve user ID from saved user');
-//             return res.status(500).send('Server error during registration');
-//         }
-
-//         const token = jwt.sign({ id: savedUser._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
-//         console.log('Token generated:', token);
-//         res.status(201).json({ user: savedUser, token: token });
-//     } catch (err) {
-//         console.error('Registration error:', err);
-//         res.status(500).send('Server error');
-//     }
-// };
+};
 
 
-// exports.registerUser = async (req, res) => {
-//     const { email, password, username } = req.body;
-//     console.log(`Attempting to register user: ${email}`);
-
-//     try {
-//         let user = await User.findOne({ email });
-//         if (user) {
-//             console.log(`User already exists with email: ${email}`);
-//             return res.status(409).json({ msg: 'Email already exists' });
-//         }
-
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         // Create user and set verified to true
-//         user = new User({
-//             username,
-//             email,
-//             password: hashedPassword,
-//             verified: true  
-//         });
-
-//         await user.save();
-//         console.log(`New user registered successfully: ${email}`);
-
-//         const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
-//         console.log('Token generated:', token);
-//         res.status(201).json({ user: user, token: token });
-//     } catch (err) {
-//         console.error('Registration error:', err.message);
-//         res.status(500).send('Server error');
-//     }
-// };
-
-
-// Function to log in a user
+// backend/controllers/userController.js
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
-    console.log(`Login request received: ${email}`);
-    
+    console.log(`Incoming request: POST /api/users/login`);
+    console.log(`Login request for email: ${email}`);
+
     try {
-      const authResult = await authenticateUser(email, password);
-      
-      if (authResult.success) {
-        res.status(200).json({ token: authResult.token });
-      } else {
-        res.status(401).json({ message: authResult.message });
-      }
+        const user = await User.findOne({ email });
+        if (!user) {
+            console.log(`No user found with email: ${email}`);
+            return res.status(404).json({ message: "No account found with that email. Please register." });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log(`Invalid password for ${email}`);
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        if (!user.verified) {
+            console.log(`User ${email} is not verified.`);
+            return res.status(403).json({ message: "Your account has not been verified." });
+        }
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        console.log(`User ${email} logged in successfully.`);
+        console.log(`Token: ${token}`);
+        console.log(`User ID: ${user._id}`);
+
+        res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
     } catch (error) {
-      console.error('Auth error:', error);
-      res.status(500).json({ message: 'Server error' });
+        console.error(`Login error for ${email}:`, error);
+        res.status(500).json({ message: "Server error" });
     }
-  };
+};
 
 exports.listAllUserHashes = async (req, res) => {
     await listAllHashes(); // Logs all users' email-hash pairs to the console
@@ -218,32 +169,29 @@ exports.deleteUser = async (req, res) => {
 // Function to handle forgot password requests
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
-    console.log(`Forgot password request for email: ${email}`);
-
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            console.log(`No account found with email: ${email}`);
-            return res.status(404).json({ message: 'No account with this email found.' });
+            return res.status(404).send('No user with this email.');
         }
-
-        const resetToken = crypto.randomBytes(20).toString('hex');
-        user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-        user.resetPasswordExpire = Date.now() + 3600000; // 1 hour from now
+        
+        const token = generatePasswordResetToken();
+        user.resetPasswordToken = token;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
         await user.save();
 
-        const resetUrl = `${req.protocol}://${req.get('host')}/api/users/reset-password/${resetToken}`;
-        const message = `Please make a PUT request to: ${resetUrl}`;
+        const resetUrl = `${FRONTEND_URL}/reset-password/${token}`;
         await sendEmail({
             to: user.email,
-            subject: 'Password Reset Token',
-            text: message
+            subject: 'Password Reset Request',
+            text: `You requested for a password reset. Please go to this link to reset your password: ${resetUrl}`,
+            html: `You requested for a password reset. Please click on this link to reset your password: <a href="${resetUrl}">${resetUrl}</a>`
         });
 
-        res.status(200).json({ message: 'Email sent.' });
+        res.send('Password reset email sent.');
     } catch (error) {
-        console.error(`Error processing forgot password for ${email}:`, error);
-        res.status(500).json({ message: 'Email could not be sent.' });
+        console.error('Failed to send the password reset email:', error);
+        res.status(500).send('Failed to send the password reset email.');
     }
 };
 

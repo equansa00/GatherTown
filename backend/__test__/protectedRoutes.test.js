@@ -10,13 +10,17 @@ describe('Protected route access', () => {
 
     beforeAll(async () => {
         server = app.listen(4000); // Start the server on a new port for testing
-        const user = await User.create({ email: 'test@example.com', password: 'password', username: 'testuser' });
-        validToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     });
 
     afterAll(async () => {
         await mongoose.disconnect();
         server.close();
+    });
+
+    beforeEach(async () => {
+        await User.deleteMany({}); // Clear users collection before each test
+        const user = await User.create({ email: 'test@example.com', password: 'password', username: 'testuser' });
+        validToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     });
 
     test('Access protected route with valid token', async () => {
@@ -36,4 +40,3 @@ describe('Protected route access', () => {
         expect(response.status).toBe(401);
     });
 });
-

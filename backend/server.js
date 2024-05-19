@@ -1,28 +1,35 @@
-//backend/server.js
 require('dotenv').config();
-const cors = require('cors');
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
-const app = express();
 const { connectDB } = require('./db');
-const jwt = require('jsonwebtoken');
-const { google } = require('googleapis');
 const handleErrors = require('./middleware/errorHandlers');
 
+const app = express();
 
+// List of allowed origins
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+
+// CORS middleware setup
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
+// Middleware setup
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(cors({
-    origin: 'http://localhost:3000', // Ensure this matches your frontend URL
-    credentials: true, // This allows cookies and headers to be included in requests
-}));
 
 // Middleware to log all requests
 app.use((req, res, next) => {
@@ -30,18 +37,23 @@ app.use((req, res, next) => {
     next();
 });
 
-// Setup body parser middleware to handle post requests
-console.log('Middlewares set up.');
-
 // Load and log environment variables
 console.log('Loading and verifying environment variables...');
 const envVars = ['MONGO_URI', 'JWT_SECRET', 'CLIENT_ID', 'CLIENT_SECRET', 'REDIRECT_URI', 'REFRESH_TOKEN'];
 envVars.forEach(env => {
-    console.log(`${env} loaded successfully:`, process.env[env] ? '[HIDDEN]' : 'Missing');
+    if (process.env[env]) {
+        console.log(`${env} loaded successfully:`, env === 'CLIENT_SECRET' || env === 'REFRESH_TOKEN' ? '[HIDDEN]' : process.env[env]);
+    } else {
+        console.error(`Error: Missing ${env}`);
+    }
 });
+
+console.log('Database URI:', process.env.MONGO_URI);
+console.log('JWT Secret:', process.env.JWT_SECRET);
 
 // Connect to MongoDB
 connectDB();
+console.log('Connected to MongoDB.');
 
 // Setup routes
 console.log('Setting up routes...');
@@ -49,29 +61,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use(handleErrors);
-
-// Configure OAuth2 client
-const oauth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
-    process.env.CLIENT_SECRET,
-    process.env.REDIRECT_URI
-);
-
-const scopes = ['https://www.googleapis.com/auth/gmail.send'];
-const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
-    prompt: 'consent'
-});
-
-console.log("Visit this URL to authorize the app:", authUrl);
-console.log("OAuth Redirect URI:", process.env.REDIRECT_URI);
-
-// Catch-all for unhandled routes
-app.use((req, res) => {
-    console.error(`Endpoint ${req.path} not found`);
-    res.status(404).send('Endpoint not found');
-});
+console.log('Routes set up.');
 
 // Start the server
 if (process.env.NODE_ENV !== 'test') {
@@ -81,8 +71,30 @@ if (process.env.NODE_ENV !== 'test') {
     });
 }
 
-
 module.exports = app;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

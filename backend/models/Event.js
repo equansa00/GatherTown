@@ -1,4 +1,5 @@
-// Importing required modules
+// backend/models/Event.js
+
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
 
@@ -27,6 +28,7 @@ const eventSchema = new mongoose.Schema({
       type: String,
       enum: ['Point'],
       required: [true, 'Location type is required'],
+      default: 'Point'
     },
     coordinates: {
       type: [Number],
@@ -54,17 +56,19 @@ const eventSchema = new mongoose.Schema({
   }
 });
 
-// Ensure the model is properly recompiled
-mongoose.model('Event', eventSchema);
+eventSchema.index({ location: '2dsphere' });
 
 eventSchema.pre('save', function (next) {
+  if (this.isNew || this.isModified('date')) {
+    if (!isAfter(this.date, startOfDay(new Date()))) {
+      throw new Error('Event date must be in the future');
+    }
+  }
   if (process.env.NODE_ENV !== 'production') {
     console.log('Saving event:', this);
   }
   next();
 });
-
-eventSchema.index({ location: '2dsphere' });
 
 eventSchema.statics.findUpcomingEvents = async function () {
   const today = startOfDay(new Date());

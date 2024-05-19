@@ -11,6 +11,8 @@ import Register from './features/auth/Register';
 import EventsList from './features/events/EventsList';
 import EventDetails from './features/events/EventDetails';
 import SubmitEvent from './features/events/SubmitEvent';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 import './App.css';
 
@@ -27,6 +29,8 @@ function App() {
           <Route path="/submit" element={<EventSubmissionForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Routes>
         <Footer />
       </AuthProvider>
