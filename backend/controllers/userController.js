@@ -12,11 +12,12 @@ const generateToken = (userId) => {
 
 exports.registerUser = async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
+    console.log("Received registration request with data:", req.body);  // Log the incoming data
 
     try {
         // Check if email or username already exists in the database
-        let userByEmail = await User.findOne({ email });
-        let userByUsername = await User.findOne({ username });
+        const userByEmail = await User.findOne({ email });
+        const userByUsername = await User.findOne({ username });
 
         if (userByEmail) {
             return res.status(409).json({ msg: 'Email already exists' });
@@ -44,6 +45,9 @@ exports.registerUser = async (req, res) => {
         res.status(201).json({ user: savedUser, token });
     } catch (err) {
         console.error('Registration error:', err);
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({ errors: err.errors });
+        }
         res.status(500).send('Server error');
     }
 };

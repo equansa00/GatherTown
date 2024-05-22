@@ -25,6 +25,14 @@ router.delete('/:id', eventController.deleteEvent); // Normally you'd include au
 router.post('/:id/rsvp', eventController.rsvpToEvent); // Normally you'd include authMiddleware here
 router.get('/:id', eventController.getEventById); // This can be public or authenticated based on use case
 
+// Log out all configured routes to verify
+router.stack.forEach((layer) => {
+    if (layer.route) {
+        const { path, methods } = layer.route;
+        console.log(`Configured route: Path = ${path}, Methods = ${Object.keys(methods).join(', ')}`);
+    }
+});
+
 module.exports = router;
 
 

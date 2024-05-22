@@ -1,4 +1,35 @@
 /* App.css */
+main {
+  flex: 1;
+  padding: 20px;
+}
+
+footer {
+  background-color: #364f64;
+  color: rgb(19, 16, 16);
+  text-align: center;
+  padding: 10px;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+.map {
+  position: fixed;
+  width: 30%;
+  height: 100%;
+}
+
+.event-list {
+  margin-left: 30%; /* Same as map width */
+  overflow-y: auto;
+  height: 100%;
+}
+
+
+
 body, html {
   margin: 0;
   padding: 0;
@@ -33,14 +64,3 @@ nav ul li a {
   text-decoration: none;
 }
 
-main {
-  flex: 1;
-  padding: 20px;
-}
-
-footer {
-  background-color: #364f64;
-  color: rgb(19, 16, 16);
-  text-align: center;
-  padding: 10px;
-}

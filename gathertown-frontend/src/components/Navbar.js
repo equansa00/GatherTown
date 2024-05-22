@@ -11,7 +11,9 @@ const Navbar = () => {
       <h1>GatherTown</h1>
       <ul>
         <li><Link to="/">Home</Link></li>
-        <li><Link to="/events">Discover Events</Link></li>
+        <li><Link to="/events">Events Near Me</Link></li>
+        <li><Link to="/events">All Events</Link></li>
+
         <li><Link to="/submit">Submit Event</Link></li>
         {!user ? (
           <>

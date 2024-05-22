@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import EventDiscovery from './pages/EventDiscovery';
+import HomePage from './pages/HomePage';
+import EventsNearMe from './pages/EventsNearMe';
 import EventSubmissionForm from './pages/EventSubmissionForm';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
@@ -14,15 +15,22 @@ import SubmitEvent from './features/events/SubmitEvent';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
+
 import './App.css';
 
 function App() {
+  const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+  if (!googleMapsApiKey) {
+    throw new Error('Missing Google Maps API key. Please add it to the .env file');
+  }
+
   return (
     <Router>
       <AuthProvider>
         <Navbar />
         <Routes>
-          <Route path="/" element={<EventDiscovery />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/events-near-me" element={<EventsNearMe googleMapsApiKey={googleMapsApiKey} />} /> 
           <Route path="/events" element={<EventsList />} />
           <Route path="/events/:id" element={<EventDetails />} />
           <Route path="/submit-event" element={<SubmitEvent />} />
@@ -39,4 +47,5 @@ function App() {
 }
 
 export default App;
+
 

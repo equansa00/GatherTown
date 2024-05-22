@@ -1,51 +1,86 @@
-// frontend/src/features/events/EventsList.js
 import React, { useState, useEffect } from 'react';
-import { fetchEvents } from '../../api/eventsService';  // Ensure this path matches the location of your fetchEvents function
-import EventDetailsModal from './EventDetailsModal';  // Importing the modal component for showing event details
+import InfiniteScroll from 'react-infinite-scroll-component';
+import EventListItem from './EventListItem';
+import { fetchEvents, rsvpToEvent } from '../../api/eventsService';
 
-function EventsList() {
+function EventsList({ onEventHover, onEventSelect }) {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [nextPage, setNextPage] = useState(1); // Pagination support
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await fetchEvents();
-        console.log("Data received from fetchEvents:", JSON.stringify(data));
-        if (data && Array.isArray(data)) {
-          setEvents(data);
-          console.log("Events set successfully:", data);
-        } else {
-          throw new Error('Data is not an array');  // Throwing an error if data is not an array
-        }
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setEvents([]);  // Ensuring the events state is set to an empty array in case of error
-      }
-    };
-    
-    fetchData();
+    fetchInitialEvents();
   }, []);
 
-  const handleEventClick = (event) => {
-    setSelectedEvent(event);  // Setting the clicked event as the selected event
+  const fetchInitialEvents = async () => {
+    try {
+      const initialEvents = await fetchEvents(40.712776, -74.005974, 10000); // Example: New York coordinates
+      setEvents(initialEvents);
+      setNextPage(nextPage + 1); // Increment page for the next fetch
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+    }
   };
 
-  const handleCloseModal = () => {
-    setSelectedEvent(null);  // Resetting the selected event on modal close
+  const fetchMoreData = async () => {
+    try {
+      const moreEvents = await fetchEvents(40.712776, -74.005974, 10000, nextPage);
+      if (moreEvents.length === 0) {
+        setHasMore(false);
+      } else {
+        setEvents(prevEvents => [...prevEvents, ...moreEvents]);
+        setNextPage(nextPage + 1); // Update the page number after successful fetch
+      }
+    } catch (error) {
+      console.error("Failed to fetch more events:", error);
+    }
+  };
+
+  const handleEventSelect = event => {
+    setSelectedEvent(selectedEvent === event ? null : event);
+    if (onEventSelect) {
+      onEventSelect(event);  // Guard against undefined function
+    }
+  };
+
+  const handleEventHover = event => {
+    if (onEventHover) {  // Guard against undefined function
+      onEventHover(event);
+    }
+    console.log("Hovered over event:", event.title);
+  };
+
+  const handleRSVP = async eventId => {
+    try {
+      await rsvpToEvent(eventId);
+      alert('RSVP successful!');
+    } catch (error) {
+      alert('Failed to RSVP');
+      console.error('RSVP error:', error);
+    }
   };
 
   return (
-    <div>
+    <InfiniteScroll
+      dataLength={events.length}
+      next={fetchMoreData}
+      hasMore={hasMore}
+      loader={<h4>Loading...</h4>}
+      height={400}
+      style={{ overflow: 'visible' }}
+    >
       {events.map(event => (
-        <div key={event._id} onClick={() => handleEventClick(event)}>
-          <h3>{event.title}</h3>  {/* Displaying the title of each event */}
-        </div>
+        <EventListItem
+          key={event._id}
+          event={event}
+          onHover={handleEventHover}
+          onSelect={handleEventSelect}
+          isSelected={selectedEvent === event}
+          onRSVP={handleRSVP}
+        />
       ))}
-      {selectedEvent && (
-        <EventDetailsModal event={selectedEvent} onClose={handleCloseModal} />
-      )}
-    </div>
+    </InfiniteScroll>
   );
 }
 

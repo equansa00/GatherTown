@@ -53,7 +53,11 @@ const eventSchema = new mongoose.Schema({
   time: {
     type: String,
     required: [true, 'Time is required'],
-  }
+  },
+  images: [{
+    type: String,
+    required: true
+}]
 });
 
 eventSchema.index({ location: '2dsphere' });

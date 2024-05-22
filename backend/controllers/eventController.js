@@ -74,12 +74,17 @@ exports.deleteEvent = async (req, res) => {
 
 // RSVP to an event
 exports.rsvpToEvent = async (req, res) => {
+  const userId = req.user.id;  // Assuming you have user ID from session or JWT token
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
       return handleNotFound(res, 'Event not found');
     }
-    // Add the RSVP logic here, e.g., adding the user to the event's attendees
+    // Assuming event has an 'attendees' field which is an array of user IDs
+    if (!event.attendees.includes(userId)) {
+      event.attendees.push(userId);
+      await event.save();
+    }
     res.json({ message: 'RSVP successful', event });
   } catch (error) {
     handleServerError(res, error);
@@ -101,22 +106,27 @@ exports.getEventById = async (req, res) => {
 
 // Get nearby events
 exports.getNearbyEvents = async (req, res) => {
-  const { lat, lng, distance = 10000 } = req.query;
-  console.log(`Querying for events near: ${lat}, ${lng} within ${distance} meters`);
+  const { lat, lng, maxDistance = 10000 } = req.query;
   try {
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      const distance = parseInt(maxDistance, 10);
+
+      if (isNaN(latitude) || isNaN(longitude) || isNaN(distance)) {
+          return res.status(400).json({ error: 'Invalid latitude, longitude, or distance parameters' });
+      }
+
       const events = await Event.find({
           location: {
               $near: {
-                  $geometry: { type: "Point", coordinates: [ parseFloat(lng), parseFloat(lat) ] },
-                  $maxDistance: parseInt(distance)
+                  $geometry: { type: "Point", coordinates: [longitude, latitude] },
+                  $maxDistance: distance
               }
           }
       });
-      console.log(`Found ${events.length} events`);
-      res.json(events);
+      res.status(200).json(events);
   } catch (error) {
-      console.error('Error fetching nearby events:', error);
-      res.status(500).send('Failed to fetch events.');
+      console.error("Failed to fetch nearby events:", error);
+      res.status(500).json({ message: "Error fetching nearby events", error });
   }
 };
-

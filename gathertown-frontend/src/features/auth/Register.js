@@ -1,3 +1,4 @@
+//gathertown-frontend/src/features/auth/Register.js
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 

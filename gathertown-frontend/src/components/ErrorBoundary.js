@@ -1,3 +1,4 @@
+// ErrorBoundary.js
 import React from 'react';
 
 class ErrorBoundary extends React.Component {
@@ -6,7 +7,7 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     // Update state so the next render will show the fallback UI.
     return { hasError: true };
   }
@@ -18,7 +19,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
+      // You can render any custom fallback UI8
       return <h2>Something went wrong. Please try again later.</h2>;
     }
 
