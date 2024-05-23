@@ -1,6 +1,6 @@
 ///home/equansa00/Desktop/Community_Driven_Local_Event_FinderFEB22/frontend/src/pages/EventSubmissionForm.js
 import React, { useState } from 'react';
-import { submitEvent } from '../api/eventsApi';
+import { submitEvent } from '../api/eventsService';
 
 
 const EventSubmissionForm = () => {

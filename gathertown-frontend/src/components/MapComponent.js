@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
-import { fetchEventsBasedOnLocation } from '../services/eventService'; // Corrected and clarified import statement
+import { fetchEvents } from '../api/eventsService';
 
 const containerStyle = {
   width: '100%',
   height: '400px'
 };
 
-const libraries = ['places', 'marker']; // Include all necessary libraries if needed
+const libraries = ['places', 'marker'];
 
 function MapComponent({ center }) {
   const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
@@ -21,36 +21,55 @@ function MapComponent({ center }) {
   const mapRef = useRef(null);
 
   useEffect(() => {
+    console.log("MapComponent: Component mounted. Loading maps...");
     if (!navigator.geolocation) {
-      console.error("Geolocation is not supported by this browser.");
+      console.error("MapComponent: Geolocation is not supported by this browser.");
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-        fetchEventsBasedOnLocation(latitude, longitude).then(events => setEvents(events));
+      async position => {
+        console.log("MapComponent: Geolocation success, fetching events...");
+        try {
+          const fetchedEvents = await fetchEvents(position.coords.latitude, position.coords.longitude, 100000);
+          console.log("MapComponent: Events fetched successfully", fetchedEvents);
+          setEvents(fetchedEvents);
+        } catch (error) {
+          console.error("MapComponent: Error fetching events", error);
+        }
       },
       error => {
-        console.error("Error getting location:", error);
+        console.error("MapComponent: Error getting location", error);
       }
     );
-  }, [fetchEventsBasedOnLocation]); // Ensure fetch function is stable and included in dependency array if it uses props/state
+  }, []);
+
+  const handleMarkerClick = (event) => {
+    console.log('Marker clicked!', event.title);
+    if (mapRef.current) {
+      mapRef.current.panTo({ lat: event.location.coordinates[1], lng: event.location.coordinates[0] });
+      mapRef.current.setZoom(15);
+    }
+  };
 
   if (loadError) return <div>Error loading maps</div>;
   if (!isLoaded) return <div>Loading Maps</div>;
 
+  console.log("MapComponent: Maps loaded, rendering...");
   return (
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={center}
       zoom={12}
-      onLoad={map => mapRef.current = map}
+      onLoad={map => {
+        console.log("MapComponent: GoogleMap loaded.");
+        mapRef.current = map;
+      }}
     >
-      {events.map(event => (
+      {Array.isArray(events) && events.map(event => (
         <Marker
           key={event._id}
           position={{ lat: event.location.coordinates[1], lng: event.location.coordinates[0] }}
-          onClick={() => console.log('Marker clicked!')}
+          onClick={() => handleMarkerClick(event)}
         />
       ))}
     </GoogleMap>
@@ -58,3 +77,4 @@ function MapComponent({ center }) {
 }
 
 export default MapComponent;
+

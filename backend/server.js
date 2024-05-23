@@ -8,8 +8,12 @@ const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const { connectDB } = require('./db');
 const handleErrors = require('./middleware/errorHandlers');
+const { requestLogger } = require('./controllers/eventController');
+
 
 const app = express();
+
+console.log('API URL:', process.env.API_URL);
 
 // List of allowed origins
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
@@ -30,6 +34,8 @@ app.use(cors({
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(requestLogger);
 
 // Middleware to log all requests
 app.use((req, res, next) => {

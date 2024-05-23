@@ -18,17 +18,14 @@ Event Management: Create, update, and manage events.
 Event Discovery: Advanced search and filter features for discovering local events.
 Installation
 Clone the repository:
-bash
-Copy code
+
 git clone https://github.com/equansa00/GatherTown.git
 cd GatherTown
 Install the dependencies:
-bash
-Copy code
+
 npm install
 Set up the environment configuration by creating a .env file in the project root:
-bash
-Copy code
+
 touch .env
 Add the required environment variables:
 Database URI: MONGODB_URI
@@ -38,27 +35,22 @@ Google OAuth Client Secret: GOOGLE_CLIENT_SECRET
 Configuration
 Ensure your .env file includes all the necessary credentials and configuration for the application to function properly. Example .env file:
 
-plaintext
-Copy code
+
 MONGODB_URI=mongodb://localhost/yourdbname
 JWT_SECRET=yourjwtsecret
 GOOGLE_CLIENT_ID=your-client-id
 GOOGLE_CLIENT_SECRET=your-client-secret
 Usage
 Start the server:
-bash
-Copy code
+
 npm start
 or, for development:
-bash
-Copy code
+
 npm run dev
 The API server will run on http://localhost:5000.
 Directory Structure
 The main folders and files are organized as follows:
 
-plaintext
-Copy code
 .
 ├── config/               # Configuration files
 ├── controllers/          # Logic for handling API requests

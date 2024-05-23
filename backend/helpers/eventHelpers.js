@@ -1,4 +1,4 @@
-//home/equansa00/Desktop/GatherTown/helpers/eventHelpers.js
+// backend/helpers/eventHelpers.js
 const Event = require('../models/Event');
 
 exports.checkEventExists = async (req, res, next) => {
@@ -16,7 +16,7 @@ exports.checkEventExists = async (req, res, next) => {
 };
 
 exports.isAuthorized = (req, res, next) => {
-  if (req.event.creator.toString() !== req.user.id) {
+  if (req.event.creator.toString() !== req.user._id.toString()) {
     return res.status(401).json({ msg: 'User not authorized' });
   }
   next();

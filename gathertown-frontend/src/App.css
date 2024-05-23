@@ -23,12 +23,10 @@ footer {
 }
 
 .event-list {
-  margin-left: 30%; /* Same as map width */
+  margin-left: 30%; /* !important; */
   overflow-y: auto;
   height: 100%;
 }
-
-
 
 body, html {
   margin: 0;

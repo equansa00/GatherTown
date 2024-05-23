@@ -1,57 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import InfiniteScroll from 'react-infinite-scroll-component';
+import React, { useState, useEffect, useCallback } from 'react';
 import EventListItem from './EventListItem';
 import { fetchEvents, rsvpToEvent } from '../../api/eventsService';
+import { fetchAddress } from '../../utils/geolocationUtils';
 
-function EventsList({ onEventHover, onEventSelect }) {
+const EventsList = ({ onEventHover, onEventClick }) => {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [nextPage, setNextPage] = useState(1); // Pagination support
 
-  useEffect(() => {
-    fetchInitialEvents();
-  }, []);
-
-  const fetchInitialEvents = async () => {
+  const fetchInitialEvents = useCallback(async () => {
     try {
+      console.log('Fetching initial events...');
       const initialEvents = await fetchEvents(40.712776, -74.005974, 10000); // Example: New York coordinates
-      setEvents(initialEvents);
-      setNextPage(nextPage + 1); // Increment page for the next fetch
+      console.log('Initial events fetched:', initialEvents);
+      const eventsWithAddresses = await Promise.all(initialEvents.map(async event => {
+        if (event.location && event.location.coordinates) {
+          const [lng, lat] = event.location.coordinates;
+          const address = await fetchAddress(lat, lng);
+          return { ...event, address };
+        }
+        return { ...event, address: 'Unknown Address' };
+      }));
+      console.log('Events with addresses:', eventsWithAddresses);
+      setEvents(eventsWithAddresses);
     } catch (error) {
       console.error("Failed to fetch events:", error);
     }
-  };
+  }, []);
 
-  const fetchMoreData = async () => {
-    try {
-      const moreEvents = await fetchEvents(40.712776, -74.005974, 10000, nextPage);
-      if (moreEvents.length === 0) {
-        setHasMore(false);
-      } else {
-        setEvents(prevEvents => [...prevEvents, ...moreEvents]);
-        setNextPage(nextPage + 1); // Update the page number after successful fetch
-      }
-    } catch (error) {
-      console.error("Failed to fetch more events:", error);
-    }
-  };
+  useEffect(() => {
+    fetchInitialEvents();
+  }, [fetchInitialEvents]);
 
-  const handleEventSelect = event => {
+  const handleEventSelect = (event) => {
+    console.log('Event selected:', event);
     setSelectedEvent(selectedEvent === event ? null : event);
-    if (onEventSelect) {
-      onEventSelect(event);  // Guard against undefined function
+    if (onEventClick) {
+      onEventClick(event);
     }
   };
 
-  const handleEventHover = event => {
-    if (onEventHover) {  // Guard against undefined function
+  const handleEventHover = (event) => {
+    if (onEventHover) {
       onEventHover(event);
     }
     console.log("Hovered over event:", event.title);
   };
 
-  const handleRSVP = async eventId => {
+  const handleRSVP = async (eventId) => {
     try {
       await rsvpToEvent(eventId);
       alert('RSVP successful!');
@@ -62,14 +57,7 @@ function EventsList({ onEventHover, onEventSelect }) {
   };
 
   return (
-    <InfiniteScroll
-      dataLength={events.length}
-      next={fetchMoreData}
-      hasMore={hasMore}
-      loader={<h4>Loading...</h4>}
-      height={400}
-      style={{ overflow: 'visible' }}
-    >
+    <div>
       {events.map(event => (
         <EventListItem
           key={event._id}
@@ -80,8 +68,8 @@ function EventsList({ onEventHover, onEventSelect }) {
           onRSVP={handleRSVP}
         />
       ))}
-    </InfiniteScroll>
+    </div>
   );
-}
+};
 
 export default EventsList;

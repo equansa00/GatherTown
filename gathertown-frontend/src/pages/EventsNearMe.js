@@ -1,5 +1,4 @@
 import axios from 'axios';
-
 import React, { useState, useEffect, useCallback } from 'react';
 import MapComponent from '../components/MapComponent';
 import { fetchEvents } from '../api/eventsService';
@@ -32,7 +31,7 @@ function EventsNearMe({ googleMapsApiKey }) {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-          fetchEventsBasedOnLocation(); // Fetch events after setting center
+          fetchEventsBasedOnLocation(position.coords.latitude, position.coords.longitude);
         },
         error => {
           console.error("Geolocation error:", error);
@@ -46,9 +45,9 @@ function EventsNearMe({ googleMapsApiKey }) {
     fetchLocationAndEvents();
   }, []);
 
-  const fetchEventsBasedOnLocation = useCallback(async () => {
+  const fetchEventsBasedOnLocation = useCallback(async (latitude, longitude) => {
     try {
-      const data = await fetchEvents(center.lat, center.lng, 10000);
+      const data = await fetchEvents(latitude, longitude, 10000);
       setEvents(data);
       setError(null);
     } catch (err) {
@@ -57,7 +56,7 @@ function EventsNearMe({ googleMapsApiKey }) {
     } finally {
       setIsLoading(false);
     }
-  }, [center]);
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -78,7 +77,7 @@ function EventsNearMe({ googleMapsApiKey }) {
       }
       const newLocation = response.data.results[0].geometry.location;
       setCenter(newLocation);
-      fetchEventsBasedOnLocation();  // Fetch events for the new location
+      fetchEventsBasedOnLocation(newLocation.lat, newLocation.lng);
       setSearch('');
     } catch (error) {
       console.error('Failed to fetch location:', error);
@@ -125,3 +124,4 @@ function EventsNearMe({ googleMapsApiKey }) {
 }
 
 export default EventsNearMe;
+

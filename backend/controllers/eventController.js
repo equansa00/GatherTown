@@ -1,6 +1,25 @@
 // backend/controllers/eventController.js
 const Event = require('../models/Event');  // Ensure this is only declared once
 const { validationResult } = require('express-validator');
+const logger = require('../config/logger');
+
+const requestLogger = (req, res, next) => {
+  const logEntry = {
+    level: "info",
+    message: "Received HTTP request",
+    method: req.method,
+    path: req.originalUrl,
+    ip: req.ip,
+    userId: req.user ? req.user.id : 'Guest',
+    sessionID: req.sessionID ? req.sessionID : 'No session',  // Assuming session middleware is used
+    userAgent: req.headers['user-agent'],  // Log user agent details
+    timestamp: new Date().toISOString()
+  };
+  console.log(logEntry);
+  next();
+};
+
+exports.requestLogger = requestLogger;
 
 // Helper functions
 const handleNotFound = (res, message) => res.status(404).json({ msg: message });
@@ -74,12 +93,9 @@ exports.deleteEvent = async (req, res) => {
 
 // RSVP to an event
 exports.rsvpToEvent = async (req, res) => {
-  const userId = req.user.id;  // Assuming you have user ID from session or JWT token
+  const userId = req.user._id;  // Ensure this is available from the auth middleware
   try {
-    const event = await Event.findById(req.params.id);
-    if (!event) {
-      return handleNotFound(res, 'Event not found');
-    }
+    const event = req.event;  // Retrieved from the helper
     // Assuming event has an 'attendees' field which is an array of user IDs
     if (!event.attendees.includes(userId)) {
       event.attendees.push(userId);
@@ -107,6 +123,8 @@ exports.getEventById = async (req, res) => {
 // Get nearby events
 exports.getNearbyEvents = async (req, res) => {
   const { lat, lng, maxDistance = 10000 } = req.query;
+  logger.info(`Received request to fetch nearby events with parameters: lat=${lat}, lng=${lng}, maxDistance=${maxDistance}`);
+  
   try {
       const latitude = parseFloat(lat);
       const longitude = parseFloat(lng);
@@ -124,9 +142,11 @@ exports.getNearbyEvents = async (req, res) => {
               }
           }
       });
+      logger.info(`Events fetched successfully: ${events.length} events found.`);
       res.status(200).json(events);
   } catch (error) {
-      console.error("Failed to fetch nearby events:", error);
+      logger.error("Failed to fetch nearby events", { error: error.message });
       res.status(500).json({ message: "Error fetching nearby events", error });
   }
 };
+
