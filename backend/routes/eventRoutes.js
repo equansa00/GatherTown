@@ -18,6 +18,7 @@ const createEventValidation = [
 
 // Route to find nearby events - this route doesn't require authentication for public access
 router.get('/nearby', eventController.getNearbyEvents);
+router.get('/byZip', eventController.getEventsByZip);
 
 // Other Event CRUD operations
 router.post('/', authMiddleware, createEventValidation, eventController.createEvent);

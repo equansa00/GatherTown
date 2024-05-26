@@ -5,7 +5,6 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
-import EventsNearMe from './pages/EventsNearMe';
 import EventSubmissionForm from './pages/EventSubmissionForm';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
@@ -14,7 +13,6 @@ import EventDetails from './features/events/EventDetails';
 import SubmitEvent from './features/events/SubmitEvent';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-
 
 import './App.css';
 
@@ -27,25 +25,26 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/events-near-me" element={<EventsNearMe googleMapsApiKey={googleMapsApiKey} />} /> 
-          <Route path="/events" element={<EventsList />} />
-          <Route path="/events/:id" element={<EventDetails />} />
-          <Route path="/submit-event" element={<SubmitEvent />} />
-          <Route path="/submit" element={<EventSubmissionForm />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-        </Routes>
-        <Footer />
+        <div className="container">
+          <Navbar />
+          <div className="main-content">
+            <Routes>
+              <Route path="/" element={<HomePage  googleMapsApiKey={googleMapsApiKey} />} />
+              <Route path="/events" element={<EventsList />} />
+              <Route path="/events/:id" element={<EventDetails />} />
+              <Route path="/submit-event" element={<SubmitEvent />} />
+              <Route path="/submit" element={<EventSubmissionForm />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+            </Routes>
+          </div>
+          <Footer />
+        </div>
       </AuthProvider>
     </Router>
   );
 }
 
 export default App;
-
-

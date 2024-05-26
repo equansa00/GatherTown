@@ -49,7 +49,8 @@ function EventDetails({ event }) {
 
   return (
     <div>
-      <h2>{eventDetails.title}</h2>
+      {eventDetails.image && <img src={eventDetails.image} alt={eventDetails.title} style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />} 
+      <h2>{eventDetails.title}</h2> 
       <p>{eventDetails.description}</p>
       <p>Date: {new Date(eventDetails.date).toLocaleDateString()} at {eventDetails.time}</p>
       <p>Location: {address}</p>

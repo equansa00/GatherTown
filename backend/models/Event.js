@@ -1,5 +1,3 @@
-// backend/models/Event.js
-
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
 
@@ -37,13 +35,11 @@ const eventSchema = new mongoose.Schema({
         validator: ([lng, lat]) => lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90,
         message: 'Coordinates must be valid longitude and latitude values',
       },
-
     },
     address: {  // Adding an address field
       type: String,
       default: 'Unknown Address'
-  }
-  
+    }
   },
   category: {
     type: String,
@@ -63,7 +59,7 @@ const eventSchema = new mongoose.Schema({
   images: [{
     type: String,
     required: true
-}]
+  }]
 });
 
 eventSchema.index({ location: '2dsphere' });
