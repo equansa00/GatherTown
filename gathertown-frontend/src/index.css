@@ -92,6 +92,16 @@ body, html {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
+.featured-event {
+    animation: fade 1s ease-in-out;
+  }
+  
+  @keyframes fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+
 
 /* Footer */
 footer {

@@ -1,3 +1,5 @@
+// backend/models/Event.js
+
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
 
@@ -51,6 +53,10 @@ const eventSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Creator is required'],
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false,
   },
   time: {
     type: String,

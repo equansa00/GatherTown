@@ -1,4 +1,3 @@
-// backend/routes/eventRoutes.js
 const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
@@ -20,8 +19,15 @@ const createEventValidation = [
 router.get('/nearby', eventController.getNearbyEvents);
 router.get('/byZip', eventController.getEventsByZip);
 
+// Define the endpoint for featured events
+router.get('/featured', eventController.getFeaturedEvents);
+
+// Define the endpoint for random events
+router.get('/random', eventController.getRandomEvents);
+
 // Other Event CRUD operations
 router.post('/', authMiddleware, createEventValidation, eventController.createEvent);
+router.get('/all', eventController.getAllEvents);
 router.get('/', eventController.getEvents);
 router.put('/:id', authMiddleware, checkEventExists, isAuthorized, createEventValidation, eventController.updateEvent);
 router.delete('/:id', authMiddleware, checkEventExists, isAuthorized, eventController.deleteEvent);
@@ -37,6 +43,11 @@ router.stack.forEach((layer) => {
 });
 
 module.exports = router;
+
+
+
+
+
 
 
 // // backend/routes/eventRoutes.js

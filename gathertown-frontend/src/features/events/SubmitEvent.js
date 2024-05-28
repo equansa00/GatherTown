@@ -1,6 +1,6 @@
-// frontend/src/features/events/SubmitEvent.js
+// src/features/events/SubmitEvent.js
 import React, { useState } from 'react';
-import { submitEvent } from '../../api/eventsService'; // Ensure the path is correct
+import { addEvent } from '../../api/eventsService';
 
 const SubmitEvent = () => {
   const [title, setTitle] = useState('');
@@ -23,7 +23,7 @@ const SubmitEvent = () => {
     };
 
     try {
-      const response = await submitEvent(eventData);
+      const response = await addEvent(eventData);
       console.log('Event submitted successfully:', response);
       // Optionally, reset form fields here
     } catch (error) {
@@ -59,4 +59,3 @@ const SubmitEvent = () => {
 };
 
 export default SubmitEvent;
-

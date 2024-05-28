@@ -1,73 +1,141 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchEvents, rsvpToEvent } from '../../api/eventsService';
-import { fetchAddress } from '../../utils/geolocationUtils';
+import EventSearch from './EventSearch';
+import './EventsList.css';
+import { getDistanceFromLatLonInMiles } from '../../utils/geolocationUtils';
 
-const EventsList = ({ onEventClick, onLoadMore }) => {
+const EventsList = ({ onEventClick, onEventHover = () => {}, userLocation, setPosition, setEvents, isLoading, setIsLoading, loadError, setLoadError }) => {
   const [eventList, setEventList] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const fetchInitialEvents = useCallback(async () => {
-    try {
-      const initialEvents = await fetchEvents(40.712776, -74.005974, 10000); // Example: New York coordinates
-      const eventsWithAddresses = await Promise.all(initialEvents.map(async event => {
-        if (event.location && event.location.coordinates) {
-          const [lng, lat] = event.location.coordinates;
-          const address = await fetchAddress(lat, lng);
-          return { ...event, address };
-        }
-        return { ...event, address: 'Unknown Address' };
-      }));
-      console.log('Fetched events with addresses:', eventsWithAddresses);
-      setEventList(eventsWithAddresses);
-    } catch (error) {
-      console.error("Failed to fetch events:", error);
-    }
-  }, []);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [searchParams, setSearchParams] = useState({});
 
   useEffect(() => {
-    fetchInitialEvents();
-  }, [fetchInitialEvents]);
+    if (userLocation) {
+      console.log('User location updated:', userLocation);
+      loadEvents(0, searchParams);
+    }
+  }, [userLocation]);
 
-  const handleEventSelect = (event) => {
-    setSelectedEvent(selectedEvent === event ? null : event);
-    if (onEventClick) {
-      onEventClick(event);
+  const loadEvents = async (page, params = {}) => {
+    if (!userLocation) {
+      console.error('User location is not defined.');
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadError('');
+    try {
+      const lat = userLocation.lat || 40.730610; // Default latitude for New York City
+      const lng = userLocation.lng || -73.935242; // Default longitude for New York City
+      console.log(`Loading events for lat: ${lat}, lng: ${lng}, page: ${page}`);
+      const newEvents = await fetchEvents({ ...params, lat, lng, page });
+
+      // Calculate distance for each event
+      const eventsWithDistance = newEvents.map(event => ({
+        ...event,
+        distance: getDistanceFromLatLonInMiles(lat, lng, event.location.coordinates[1], event.location.coordinates[0])
+      }));
+
+      // Sort events by distance
+      eventsWithDistance.sort((a, b) => a.distance - b.distance);
+
+      setEventList((prevEvents) => (page === 0 ? eventsWithDistance : [...prevEvents, ...eventsWithDistance]));
+      setCurrentPage(page);
+      setEvents(eventsWithDistance);
+      console.log('Events loaded successfully:', eventsWithDistance);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setLoadError('Failed to load events');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRSVP = async (eventId) => {
+  const handleEventSelect = (event) => {
+    onEventClick(event);
+    console.log('Event selected:', event);
+  };
+
+  const handleRSVP = async (eventId, e) => {
+    e.stopPropagation();
     try {
       await rsvpToEvent(eventId);
       alert('RSVP successful!');
+      console.log(`RSVP successful for event ID: ${eventId}`);
     } catch (error) {
       alert('Failed to RSVP');
       console.error('RSVP error:', error);
     }
   };
 
+  const handleLoadMore = () => {
+    loadEvents(currentPage + 1, searchParams);
+  };
+
+  const handleSearch = (params) => {
+    setEventList([]);
+    setSearchParams(params);
+    loadEvents(0, params);
+  };
+
+  const handleGeolocation = async () => {
+    setIsLoading(true);
+    setLoadError('');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setPosition({ lat: latitude, lng: longitude });
+          await loadEvents(0, { ...searchParams, lat: latitude, lng: longitude });
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setLoadError('Failed to retrieve location');
+          setIsLoading(false);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+      setLoadError('Geolocation is not supported by this browser.');
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading && eventList.length === 0) {
+    return <p>Loading events...</p>;
+  }
+
+  if (loadError) {
+    return <p>{loadError}</p>;
+  }
+
+  if (!eventList || eventList.length === 0) {
+    return <p>No events available.</p>;
+  }
+
   return (
     <div className="event-list">
-      {eventList.map(event => (
+      <EventSearch setEvents={handleSearch} />
+      <button onClick={handleGeolocation}>Use My Location</button>
+      {eventList.map((event, index) => (
         <div
-          key={event._id}
+          key={event._id ? `${event._id}-${index}` : index}
           className="event-item"
           onClick={() => handleEventSelect(event)}
+          onMouseEnter={() => onEventHover(event)}
         >
           <h3>{event.title}</h3>
           <p>{new Date(event.date).toLocaleString()}</p>
-          <p>{event.address}</p>
-          <button onClick={(e) => {
-            e.stopPropagation();
-            handleRSVP(event._id);
-          }}>RSVP</button>
+          <p>{event.location.address}</p>
+          <p>{event.distance !== undefined ? `${event.distance.toFixed(2)} miles away` : 'Distance unknown'}</p>
+          <button onClick={(e) => handleRSVP(event._id, e)}>RSVP</button>
         </div>
       ))}
-      {onLoadMore && (
-        <button onClick={onLoadMore} className="load-more">Load More</button>
-      )}
+      <button onClick={handleLoadMore} className="load-more">Load More</button>
       <p>Showing {eventList.length} events</p>
     </div>
   );
 };
 
 export default EventsList;
+

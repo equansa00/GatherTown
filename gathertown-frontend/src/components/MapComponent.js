@@ -1,103 +1,101 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { GoogleMap, Marker, InfoWindow } from '@react-google-maps/api';
+import React, { useRef, useEffect, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-const containerStyle = {
-  width: '100%',
-  height: '100%',
-};
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
 
-function MapComponent({ center, events, selectedEvent, onMarkerClick, onLoad }) {
-  const [activeMarker, setActiveMarker] = useState(null);
-  const mapRef = useRef(null);
+const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, onEventHover }) => {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null); // Use a ref to hold the map instance
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const markers = useRef([]);
 
-  const handleMarkerClickInternal = (event) => {
-    console.log('Marker clicked:', event); // Log click
-    setActiveMarker(event);
-    onMarkerClick(event);
+  useEffect(() => {
+    console.log('MapComponent mounted');
 
-    if (mapRef.current && isValidCoordinates(event.location.coordinates)) {
-      const { lat, lng } = convertArrayToLatLng(event.location.coordinates);
-      mapRef.current.panTo({ lat, lng });
-      mapRef.current.setZoom(15);
-    } else {
-      console.error('Invalid coordinates or map ref not ready for panTo:', event.location.coordinates);
+    if (mapContainerRef.current && !mapRef.current) {
+      console.log('Map container ref is available');
+      const mapInstance = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [center.lng, center.lat],
+        zoom: 12,
+      });
+
+      mapInstance.on('load', () => {
+        console.log('Map loaded');
+        mapRef.current = mapInstance;
+        setMapLoaded(true);
+        if (onLoad) onLoad(mapInstance);
+      });
+
+      mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      return () => {
+        console.log('Map will be removed');
+        mapInstance.remove();
+        console.log('Map removed');
+      };
     }
+  }, [center, onLoad]);
+
+  useEffect(() => {
+    if (mapRef.current && mapLoaded && selectedEvent) {
+      const [lng, lat] = selectedEvent.location.coordinates;
+      console.log(`Selected event coordinates: ${lng}, ${lat}`);
+      mapRef.current.flyTo({ center: [lng, lat], zoom: 15 });
+    }
+  }, [mapLoaded, selectedEvent]);
+
+  useEffect(() => {
+    if (mapRef.current && mapLoaded && events.length > 0) {
+      // Clear existing markers
+      markers.current.forEach(marker => marker.remove());
+      markers.current = [];
+
+      // Add new markers
+      events.forEach((event) => {
+        const [lng, lat] = event.location.coordinates;
+        console.log(`Adding marker at coordinates: ${lng}, ${lat}`);
+
+        try {
+          const marker = new mapboxgl.Marker()
+            .setLngLat([lng, lat])
+            .addTo(mapRef.current);
+
+          const markerElement = marker.getElement();
+          if (markerElement) {
+            markerElement.addEventListener('click', () => handleMarkerClick(event), { passive: true });
+            markerElement.addEventListener('mouseover', () => handleMarkerMouseOver(event), { passive: true });
+          } else {
+            console.warn('Marker element is undefined');
+          }
+
+          markers.current.push(marker);
+        } catch (error) {
+          console.error('Error adding marker:', error);
+        }
+      });
+    }
+  }, [mapLoaded, events]);
+
+  const handleMarkerClick = (event) => {
+    const [lng, lat] = event.location.coordinates;
+    console.log(`Marker clicked: ${lng}, ${lat}`);
+    mapRef.current.flyTo({ center: [lng, lat], zoom: 15 });
+    if (onMarkerClick) onMarkerClick(event);
   };
 
   const handleMarkerMouseOver = (event) => {
-    console.log('Marker hovered:', event); // Log hover
-  };
-
-  useEffect(() => {
-    if (selectedEvent && mapRef.current && isValidCoordinates(selectedEvent.location.coordinates)) {
-      const { lat, lng } = convertArrayToLatLng(selectedEvent.location.coordinates);
-      mapRef.current.panTo({ lat, lng });
-      mapRef.current.setZoom(15);
-    } else if (selectedEvent) {
-      console.error('Invalid coordinates or map ref not ready for panTo:', selectedEvent.location.coordinates);
-    }
-  }, [selectedEvent]);
-
-  // Helper function to validate coordinates
-  const isValidCoordinates = (coordinates) => {
-    return coordinates && Array.isArray(coordinates) && coordinates.length === 2 && !isNaN(coordinates[0]) && !isNaN(coordinates[1]);
-  };
-
-  // Helper function to convert array to {lat, lng} object
-  const convertArrayToLatLng = (coordinates) => {
-    return {
-      lat: coordinates[1],
-      lng: coordinates[0],
-    };
+    console.log(`Marker hovered: ${event.title}`);
+    if (onEventHover) onEventHover(event);
   };
 
   return (
-    <GoogleMap
-      onLoad={(mapInstance) => {
-        mapRef.current = mapInstance;
-        if (onLoad) onLoad(mapInstance);
-      }}
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={12}
-    >
-      {events.map((event) => {
-        if (!isValidCoordinates(event.location.coordinates)) {
-          console.error('Invalid coordinates for event:', event);
-          return null;
-        }
-
-        const { lat, lng } = convertArrayToLatLng(event.location.coordinates);
-        console.log('Marking event on map:', event); // Log event being marked
-
-        return (
-          <Marker
-            key={event._id}
-            position={{ lat, lng }}
-            onClick={() => handleMarkerClickInternal(event)}
-            onMouseOver={() => handleMarkerMouseOver(event)}
-            icon={{
-              url: `http://maps.google.com/mapfiles/ms/icons/red-dot.png`,
-            }}
-          >
-            {activeMarker === event && (
-              <InfoWindow onCloseClick={() => setActiveMarker(null)} position={{ lat, lng }}>
-                <div>
-                  <h4>{event.title}</h4>
-                  <p>{event.description}</p>
-                </div>
-              </InfoWindow>
-            )}
-          </Marker>
-        );
-      })}
-    </GoogleMap>
+    <div className="map-container" ref={mapContainerRef} style={{ height: '500px', width: '100%' }}>
+      {/* The markers are now handled within the useEffect hook */}
+    </div>
   );
-}
+};
 
 export default MapComponent;
-
-
-
-
-

@@ -1,50 +1,39 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import EventSubmissionForm from './pages/EventSubmissionForm';
-import Login from './features/auth/Login';
-import Register from './features/auth/Register';
-import EventsList from './features/events/EventsList';
-import EventDetails from './features/events/EventDetails';
-import SubmitEvent from './features/events/SubmitEvent';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import SubmitEvent from './features/events/SubmitEvent'; // Import SubmitEvent component
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
+import AllEventsPage from './pages/AllEventsPage'; // Create and import AllEventsPage component
+import Login from './features/auth/Login'; // Ensure this file exists
+import Register from './features/auth/Register'; // Ensure this file exists
+import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
 
-import './App.css';
-
-function App() {
-  const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-  if (!googleMapsApiKey) {
-    throw new Error('Missing Google Maps API key. Please add it to the .env file');
-  }
-
+const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <div className="container">
+        <ErrorBoundary>
           <Navbar />
-          <div className="main-content">
-            <Routes>
-              <Route path="/" element={<HomePage  googleMapsApiKey={googleMapsApiKey} />} />
-              <Route path="/events" element={<EventsList />} />
-              <Route path="/events/:id" element={<EventDetails />} />
-              <Route path="/submit-event" element={<SubmitEvent />} />
-              <Route path="/submit" element={<EventSubmissionForm />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
-            </Routes>
-          </div>
+          <Routes>
+            <Route path="/" element={<HomePage googleMapsApiKey={process.env.REACT_APP_MAPBOX_ACCESS_TOKEN} />} />
+            <Route path="/submit" element={<SubmitEvent />} />
+            <Route path="/all-events" element={<AllEventsPage />} /> {/* Define route for All Events page */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Routes>
           <Footer />
-        </div>
+        </ErrorBoundary>
       </AuthProvider>
     </Router>
   );
-}
+};
 
 export default App;
+
