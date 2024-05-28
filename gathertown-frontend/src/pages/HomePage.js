@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import MapComponent from '../components/MapComponent';
-import EventsList from '../features/events/EventsList';
+import HomeEventsList from '../features/events/HomeEventsList'; // This is the specific list component for the homepage
 import EventDetails from '../features/events/EventDetails';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -62,7 +62,7 @@ const HomePage = () => {
             />
           </div>
           <div className="events-section">
-            <EventsList
+            <HomeEventsList
               onEventClick={handleEventClick}
               onEventHover={handleEventHover}
               userLocation={position}
