@@ -1,0 +1,121 @@
+/* General page styles */
+body {
+  background-color: #bebbbb; /* Dark grey background */
+  color: #ffffff; /* White text color */
+  font-family: Arial, sans-serif;
+}
+
+.outer-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header styling */
+.header {
+  background-color: #1a1a1a; /* Darker grey for the header */
+  color: #ffffff;
+  text-align: center;
+  padding: 1em;
+  font-size: 1.5em;
+}
+
+/* Navbar styling */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  background-color: #333333; /* Dark grey for the navbar */
+  padding: 0.5em 1em;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar a {
+  color: #ffffff;
+  text-decoration: none;
+  margin: 0 1em;
+  font-weight: bold;
+}
+
+.navbar a:hover {
+  color: #4CAF50; /* Light green on hover */
+}
+
+/* Footer styling */
+.footer {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  text-align: center;
+  padding: 1em;
+  margin-top: auto;
+}
+
+/* Main content area divided into three columns */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 1em;
+  padding: 1em;
+  background-color: #2e2e2e;
+}
+
+/* Map container styling */
+.map-container {
+  grid-column: 3;
+  position: sticky;
+  top: 1em;
+}
+
+/* Events section styling */
+.events-section {
+  grid-column: 2;
+  background-color: #333333;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  padding: 1em;
+}
+
+/* Event details section styling */
+.event-details {
+  grid-column: 1;
+  background-color: #333333;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  padding: 1em;
+}
+
+/* Event item styling */
+.event-item {
+  margin-bottom: 1em;
+  padding: 1em;
+  background-color: #444444;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.event-item:hover {
+  background-color: #555555;
+}
+
+/* Button styling */
+button {
+  background-color: #4CAF50;
+  color: #ffffff;
+  border: none;
+  padding: 0.5em 1em;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1em;
+  margin: 0.5em 0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+/* Text styling for event details */
+.event-details p {
+  margin: 0.5em 0;
+}

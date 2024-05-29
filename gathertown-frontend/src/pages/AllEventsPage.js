@@ -1,4 +1,3 @@
-// src/pages/AllEventsPage.js
 import React, { useEffect, useState } from 'react';
 import { fetchAllEvents } from '../api/eventsService';
 import AllEventsList from '../features/events/AllEventsList';
@@ -53,5 +52,3 @@ const AllEventsPage = () => {
 };
 
 export default AllEventsPage;
-
-

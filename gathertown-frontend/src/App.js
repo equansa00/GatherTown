@@ -1,28 +1,58 @@
 // src/App.js
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import SubmitEvent from './features/events/SubmitEvent'; // Import SubmitEvent component
+import SubmitEvent from './features/events/SubmitEvent';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
-import AllEventsPage from './pages/AllEventsPage'; // Create and import AllEventsPage component
-import Login from './features/auth/Login'; // Ensure this file exists
-import Register from './features/auth/Register'; // Ensure this file exists
-import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
+import AllEventsPage from './pages/AllEventsPage';
+import Login from './features/auth/Login';
+import Register from './features/auth/Register';
+import { AuthProvider } from './context/AuthContext';
 
 const App = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+
+  const handleEventClick = () => {
+    // handle event click
+  };
+
+  const handleEventHover = () => {
+    // handle event hover
+  };
+
+  const userLocation = {
+    lat: 40.73061, // Example coordinates
+    lng: -73.935242
+  };
+
   return (
     <Router>
       <AuthProvider>
         <ErrorBoundary>
           <Navbar />
           <Routes>
-            <Route path="/" element={<HomePage googleMapsApiKey={process.env.REACT_APP_MAPBOX_ACCESS_TOKEN} />} />
+            <Route 
+              path="/" 
+              element={
+                <HomePage 
+                  googleMapsApiKey={process.env.REACT_APP_MAPBOX_ACCESS_TOKEN} 
+                  isLoading={isLoading}
+                  setIsLoading={setIsLoading}
+                  loadError={loadError}
+                  setLoadError={setLoadError}
+                  userLocation={userLocation}
+                  handleEventClick={handleEventClick}
+                  handleEventHover={handleEventHover}
+                />
+              } 
+            />
             <Route path="/submit" element={<SubmitEvent />} />
-            <Route path="/all-events" element={<AllEventsPage />} /> {/* Define route for All Events page */}
+            <Route path="/all-events" element={<AllEventsPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/login" element={<Login />} />

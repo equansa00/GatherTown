@@ -1,141 +1,130 @@
-// src/features/events/HomeEventsList.js
-import React, { useEffect, useState } from 'react';
-import { fetchEvents, rsvpToEvent } from '../../api/eventsService';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { fetchEvents } from '../../api/eventsService';
 import EventSearch from './EventSearch';
 import './EventsList.css';
 import { getDistanceFromLatLonInMiles } from '../../utils/geolocationUtils';
 
-const HomeEventsList = ({ onEventClick, onEventHover = () => {}, userLocation, setPosition, setEvents, isLoading, setIsLoading, loadError, setLoadError }) => {
+const HomeEventsList = ({ 
+  onEventClick, 
+  onEventHover = () => {}, 
+  userLocation, 
+  setIsLoading, 
+  loadError, 
+  setLoadError,
+  isLoading // Ensure this is passed correctly
+}) => {
   const [eventList, setEventList] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [searchParams, setSearchParams] = useState({});
+  const [eventsLimit, setEventsLimit] = useState(10); // Default limit
 
-  useEffect(() => {
-    if (userLocation) {
-      console.log('User location updated:', userLocation);
-      loadEvents(0, searchParams);
-    }
-  }, [userLocation]);
+  const logMessage = (message) => {
+    console.log(`[HomeEventsList] ${message}`);
+  };
 
-  const loadEvents = async (page, params = {}) => {
+  const memoizedGetDistance = useMemo(() => {
+    return getDistanceFromLatLonInMiles;
+  }, []);
+
+  const loadEvents = useCallback(async (page = 0, params = {}, limit = 10) => {
+    logMessage(`Loading events: page=${page}, params=${JSON.stringify(params)}, limit=${limit}`);
+
     if (!userLocation) {
-      console.error('User location is not defined.');
+      logMessage('User location is not defined.');
       return;
     }
 
     setIsLoading(true);
     setLoadError('');
-    try {
-      const lat = userLocation.lat || 40.730610; // Default latitude for New York City
-      const lng = userLocation.lng || -73.935242; // Default longitude for New York City
-      console.log(`Loading events for lat: ${lat}, lng: ${lng}, page: ${page}`);
-      const newEvents = await fetchEvents({ ...params, lat, lng, page });
 
-      // Calculate distance for each event
+    try {
+      const lat = userLocation.lat || 40.730610;
+      const lng = userLocation.lng || -73.935242;
+      const newEvents = await fetchEvents({ ...params, lat, lng, page, limit });
+
+      logMessage(`Fetched ${newEvents.length} events from API`);
+
       const eventsWithDistance = newEvents.map(event => ({
         ...event,
-        distance: getDistanceFromLatLonInMiles(lat, lng, event.location.coordinates[1], event.location.coordinates[0])
+        distance: memoizedGetDistance(lat, lng, event.location.coordinates[1], event.location.coordinates[0])
       }));
 
-      // Sort events by distance
       eventsWithDistance.sort((a, b) => a.distance - b.distance);
 
       setEventList((prevEvents) => (page === 0 ? eventsWithDistance : [...prevEvents, ...eventsWithDistance]));
-      setCurrentPage(page);
-      setEvents(eventsWithDistance);
-      console.log('Events loaded successfully:', eventsWithDistance);
+      setCurrentPage(page + 1);
     } catch (error) {
-      console.error('Error loading events:', error);
-      setLoadError('Failed to load events');
+      logMessage(`Error loading events: ${error.message}`);
+      if (error.response && error.response.status === 404) {
+        setLoadError('No events found for the specified location.');
+      } else {
+        setLoadError('Failed to load events. Please try again later.');
+      }
     } finally {
       setIsLoading(false);
+      logMessage('Finished loading events');
     }
-  };
+  }, [userLocation, setIsLoading, setLoadError, memoizedGetDistance]);
+
+  useEffect(() => {
+    if (userLocation) {
+      setEventList([]);
+      setCurrentPage(0);
+      loadEvents(0, searchParams, eventsLimit);
+    }
+  }, [userLocation, loadEvents, eventsLimit]);
 
   const handleEventSelect = (event) => {
+    logMessage(`Event selected: ${event.title}`);
     onEventClick(event);
-    console.log('Event selected:', event);
-  };
-
-  const handleRSVP = async (eventId, e) => {
-    e.stopPropagation();
-    try {
-      await rsvpToEvent(eventId);
-      alert('RSVP successful!');
-      console.log(`RSVP successful for event ID: ${eventId}`);
-    } catch (error) {
-      alert('Failed to RSVP');
-      console.error('RSVP error:', error);
-    }
   };
 
   const handleLoadMore = () => {
-    loadEvents(currentPage + 1, searchParams);
+    logMessage(`Loading more events for page ${currentPage}`);
+    loadEvents(currentPage, searchParams, eventsLimit);
   };
 
-  const handleSearch = (params) => {
-    setEventList([]);
-    setSearchParams(params);
-    loadEvents(0, params);
+  const handleLimitChange = (event) => {
+    const newLimit = parseInt(event.target.value, 10);
+    logMessage(`Limit changed to ${newLimit}`);
+    setEventsLimit(newLimit);
   };
-
-  const handleGeolocation = async () => {
-    setIsLoading(true);
-    setLoadError('');
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          setPosition({ lat: latitude, lng: longitude });
-          await loadEvents(0, { ...searchParams, lat: latitude, lng: longitude });
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          setLoadError('Failed to retrieve location');
-          setIsLoading(false);
-        }
-      );
-    } else {
-      console.error('Geolocation is not supported by this browser.');
-      setLoadError('Geolocation is not supported by this browser.');
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading && eventList.length === 0) {
-    return <p>Loading events...</p>;
-  }
-
-  if (loadError) {
-    return <p>{loadError}</p>;
-  }
-
-  if (!eventList || eventList.length === 0) {
-    return <p>No events available.</p>;
-  }
 
   return (
-    <div className="event-list">
-      <EventSearch setEvents={handleSearch} />
-      <button onClick={handleGeolocation}>Use My Location</button>
-      {eventList.map((event, index) => (
-        <div
-          key={event._id ? `${event._id}-${index}` : index}
-          className="event-item"
-          onClick={() => handleEventSelect(event)}
-          onMouseEnter={() => onEventHover(event)}
-        >
-          <h3>{event.title}</h3>
-          <p>{new Date(event.date).toLocaleString()}</p>
-          <p>{event.location.address}</p>
-          <p>{event.distance !== undefined ? `${event.distance.toFixed(2)} miles away` : 'Distance unknown'}</p>
-          <button onClick={(e) => handleRSVP(event._id, e)}>RSVP</button>
-        </div>
-      ))}
-      <button onClick={handleLoadMore} className="load-more">Load More</button>
+    <div className="events-list-container">
+      <EventSearch setSearchParams={setSearchParams} />
+      <select onChange={handleLimitChange} value={eventsLimit}>
+        <option value="10">Show 10</option>
+        <option value="20">Show 20</option>
+        <option value="30">Show 30</option>
+        <option value="40">Show 40</option>
+        <option value="50">Show 50</option>
+      </select>
+      <div className="events-list">
+        {eventList.map((event) => (
+          <div 
+            key={event._id} 
+            className="event-item" 
+            onClick={() => handleEventSelect(event)}
+            onMouseEnter={() => onEventHover(event)}
+          >
+            <h3>{event.title}</h3>
+            <p>{event.description}</p>
+            <p>{new Date(event.date).toLocaleString()}</p>
+            <p>{event.location.address}</p>
+            <p>Distance: {event.distance.toFixed(2)} miles</p>
+            <button onClick={() => console.log(`RSVP to event ${event._id}`)}>RSVP</button>
+          </div>
+        ))}
+      </div>
+      {isLoading && <p>Loading...</p>}
+      {loadError && <p>{loadError}</p>}
+      {eventList.length === 0 && !isLoading && !loadError && <p>No events available</p>}
+      <button onClick={handleLoadMore} disabled={isLoading}>Load More</button>
       <p>Showing {eventList.length} events</p>
     </div>
   );
 };
 
 export default HomeEventsList;
+

@@ -1,6 +1,9 @@
 import axios from 'axios';
+import { getAuthHeader } from '../utils/auth';
 
-const API_URL = 'http://localhost:5000/api/events';
+const logMessage = (message) => {
+  console.log(`[eventsService] ${message}`);
+};
 
 // Logging all requests and responses
 axios.interceptors.request.use(request => {
@@ -16,27 +19,17 @@ axios.interceptors.response.use(response => {
   return Promise.reject(error);
 });
 
-const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
-  return { Authorization: `Bearer ${token}` };
-};
+const API_URL = 'http://localhost:5000/api/events';
 
-export const fetchEvents = async ({ lat, lng, page, ...params }) => {
+export const fetchEvents = async (params) => {
   try {
-    const response = await axios.get(`${API_URL}`, {
-      params: {
-        lat,
-        lng,
-        page,
-        ...params,
-      },
-      headers: getAuthHeader(),
-    });
-    // console.log('fetchEvents response data:', response.data);
+    logMessage(`Fetching events with params: ${JSON.stringify(params)}`);
+    const response = await axios.get(API_URL, { params });
+    logMessage(`Fetched ${response.data.length} events`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching events:', error);
-    throw new Error('Error fetching events');
+    logMessage(`Error fetching events: ${error.message}`);
+    throw error;
   }
 };
 
@@ -147,3 +140,18 @@ const handleAxiosError = (error) => {
     console.error('Error setting up request:', error.message);
   }
 };
+
+const getEvents = (lat, lng, page = 0) => {
+  return axios.get(API_URL, {
+    params: {
+      lat,
+      lng,
+      page
+    },
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};
+
+export default { getEvents };

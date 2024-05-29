@@ -1,5 +1,3 @@
-// backend/models/Event.js
-
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
 
@@ -21,14 +19,14 @@ const eventSchema = new mongoose.Schema({
       validator: (value) => isAfter(value, startOfDay(new Date())),
       message: 'Event date must be in the future',
     },
-    index: true, // Add index for faster querying
+    index: true,
   },
   location: {
     type: {
       type: String,
       enum: ['Point'],
       required: [true, 'Location type is required'],
-      default: 'Point'
+      default: 'Point',
     },
     coordinates: {
       type: [Number],
@@ -38,16 +36,16 @@ const eventSchema = new mongoose.Schema({
         message: 'Coordinates must be valid longitude and latitude values',
       },
     },
-    address: {  // Adding an address field
+    address: {
       type: String,
-      default: 'Unknown Address'
-    }
+      default: 'Unknown Address',
+    },
   },
   category: {
     type: String,
     required: [true, 'Category is required'],
-    enum: ['Music', 'Sports', 'Art', 'Food', 'Tech', 'Recreation', 'Other'], // Example categories
-    index: true, // Add index for better performance
+    enum: ['Music', 'Sports', 'Art', 'Food', 'Tech', 'Recreation', 'Other'],
+    index: true,
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
@@ -64,8 +62,8 @@ const eventSchema = new mongoose.Schema({
   },
   images: [{
     type: String,
-    required: true
-  }]
+    required: true,
+  }],
 });
 
 eventSchema.index({ location: '2dsphere' });
@@ -73,11 +71,8 @@ eventSchema.index({ location: '2dsphere' });
 eventSchema.pre('save', function (next) {
   if (this.isNew || this.isModified('date')) {
     if (!isAfter(this.date, startOfDay(new Date()))) {
-      throw new Error('Event date must be in the future');
+      return next(new Error('Event date must be in the future'));
     }
-  }
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Saving event:', this);
   }
   next();
 });
@@ -88,7 +83,5 @@ eventSchema.statics.findUpcomingEvents = async function () {
 };
 
 const Event = mongoose.model('Event', eventSchema);
-
-console.log('Event model created');
 
 module.exports = Event;

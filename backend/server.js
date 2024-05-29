@@ -8,7 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const { connectDB } = require('./db');
 const handleErrors = require('./middleware/errorHandlers');
-const { requestLogger } = require('./controllers/eventController');
+const logger = require('./config/logger');
 
 const app = express();
 
@@ -32,11 +32,18 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(requestLogger);
-
 // Middleware to log all requests
 app.use((req, res, next) => {
-    console.log(`Incoming request: ${req.method} ${req.path}`);
+    logger.info({
+        method: req.method,
+        path: req.originalUrl,
+        params: req.params,
+        query: req.query,
+        body: req.body,
+        headers: req.headers,
+        userId: req.user ? req.user.id : 'Guest',
+        sessionID: req.sessionID ? req.sessionID : 'No session',
+    });
     next();
 });
 
@@ -76,8 +83,6 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = app;
-
-
 
 
 

@@ -4,13 +4,15 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
 
-const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, onEventHover }) => {
+const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, onEventHover, useStaticMap = false }) => {
   const mapContainerRef = useRef(null);
-  const mapRef = useRef(null); // Use a ref to hold the map instance
+  const mapRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const markers = useRef([]);
 
   useEffect(() => {
+    if (useStaticMap) return;
+
     console.log('MapComponent mounted');
 
     if (mapContainerRef.current && !mapRef.current) {
@@ -37,7 +39,7 @@ const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, on
         console.log('Map removed');
       };
     }
-  }, [center, onLoad]);
+  }, [center, onLoad, useStaticMap]);
 
   useEffect(() => {
     if (mapRef.current && mapLoaded && selectedEvent) {
@@ -49,14 +51,12 @@ const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, on
 
   useEffect(() => {
     if (mapRef.current && mapLoaded && events.length > 0) {
-      // Clear existing markers
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
 
-      // Add new markers
       events.forEach((event) => {
         const [lng, lat] = event.location.coordinates;
-        console.log(`Adding marker at coordinates: ${lng}, ${lat}`);
+        // console.log(`Adding marker at coordinates: ${lng}, ${lat}`);
 
         try {
           const marker = new mapboxgl.Marker()
@@ -66,7 +66,7 @@ const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, on
           const markerElement = marker.getElement();
           if (markerElement) {
             markerElement.addEventListener('click', () => handleMarkerClick(event), { passive: true });
-            markerElement.addEventListener('mouseover', () => handleMarkerMouseOver(event), { passive: true });
+            markerElement.addEventListener('mouseenter', () => handleMarkerMouseOver(event), { passive: true });
           } else {
             console.warn('Marker element is undefined');
           }
@@ -91,9 +91,14 @@ const MapComponent = ({ center, events, selectedEvent, onMarkerClick, onLoad, on
     if (onEventHover) onEventHover(event);
   };
 
+  if (useStaticMap) {
+    const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${center.lng},${center.lat},12,0/600x300?access_token=${mapboxgl.accessToken}`;
+    return <img src={staticMapUrl} alt="Static map" style={{ width: '100%', height: '400px' }} />;
+  }
+
   return (
     <div className="map-container" ref={mapContainerRef} style={{ height: '500px', width: '100%' }}>
-      {/* The markers are now handled within the useEffect hook */}
+      {mapLoaded ? null : <div>Loading map...</div>}
     </div>
   );
 };

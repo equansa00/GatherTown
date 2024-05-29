@@ -1,7 +1,6 @@
 // src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import ErrorBoundary from './components/ErrorBoundary';
 import App from './App'; // Ensure this path is correct
 
 function handleTouchStart(event) {
@@ -20,8 +19,6 @@ document.addEventListener('touchmove', handleTouchMove, { passive: true });
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <App apiKey={process.env.REACT_APP_MAPBOX_ACCESS_TOKEN} />
-    </ErrorBoundary>
+    <App />
   </React.StrictMode>
 );
