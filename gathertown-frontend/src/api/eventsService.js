@@ -33,9 +33,9 @@ export const fetchEvents = async (params) => {
   }
 };
 
-export const fetchAllEvents = async () => {
+export const fetchAllEvents = async (params = {}) => { // Default to empty object if no params
   try {
-    const response = await axios.get(`${API_URL}/all`, { headers: getAuthHeader() });
+    const response = await axios.get(`${API_URL}/all`, { params, headers: getAuthHeader() });
     console.log('fetchAllEvents response data:', response.data);
     return response.data;
   } catch (error) {

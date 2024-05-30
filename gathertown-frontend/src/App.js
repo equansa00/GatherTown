@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
@@ -18,11 +17,11 @@ const App = () => {
   const [loadError, setLoadError] = useState('');
 
   const handleEventClick = () => {
-    // handle event click
+   
   };
 
   const handleEventHover = () => {
-    // handle event hover
+    
   };
 
   const userLocation = {
@@ -66,4 +65,5 @@ const App = () => {
 };
 
 export default App;
+
 

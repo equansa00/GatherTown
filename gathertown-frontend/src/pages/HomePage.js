@@ -66,21 +66,6 @@ const HomePage = () => {
         <ErrorDisplay message={loadError} />
       ) : (
         <div className="main-content">
-          <div className="event-details">
-            {selectedEvent ? <EventDetails event={selectedEvent} /> : <p>Select an event to see the details</p>}
-          </div>
-          <div className="events-section">
-            <HomeEventsList
-              onEventClick={handleEventClick}
-              onEventHover={handleEventHover}
-              userLocation={position}
-              setPosition={setPosition}
-              setEvents={setEvents}
-              setIsLoading={setIsLoading}
-              setLoadError={setLoadError}
-            />
-            <p>Showing events based on {selectedEvent ? `selected event: ${selectedEvent.title}` : 'current location'}</p>
-          </div>
           <div className="map-container">
             <MapComponent
               center={position}
@@ -95,11 +80,23 @@ const HomePage = () => {
               Toggle {useStaticMap ? 'Interactive' : 'Static'} Map
             </button>
           </div>
+          <div className="events-section">
+            <HomeEventsList
+              onEventClick={handleEventClick}
+              onEventHover={handleEventHover}
+              userLocation={position}
+              setPosition={setPosition}
+              setEvents={setEvents}
+              setIsLoading={setIsLoading}
+              setLoadError={setLoadError}
+            />
+            <p>Showing events based on {selectedEvent ? `selected event: ${selectedEvent.title}` : 'current location'}</p>
+          </div>
+          <div className="event-details">
+            {selectedEvent ? <EventDetails event={selectedEvent} /> : <p>Select an event to see the details</p>}
+          </div>
         </div>
       )}
-      <div className="footer">
-        <p>© 2024 Community-Driven Local Event Finder. All Rights Reserved.</p>
-      </div>
     </div>
   );
 };

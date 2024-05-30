@@ -21,7 +21,7 @@ const EventSearch = ({ setSearchParams }) => {
 
   return (
     <div className="event-search">
-      <input type="text" placeholder="Zip Code" value={zip} onChange={(e) => setZip(e.target.value)} />
+      <input type="text" placeholder="Zip code" value={zip} onChange={(e) => setZip(e.target.value)} />
       <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
       <input type="text" placeholder="State" value={state} onChange={(e) => setState(e.target.value)} />
       <input type="text" placeholder="Keyword" value={keyword} onChange={(e) => setKeyword(e.target.value)} />

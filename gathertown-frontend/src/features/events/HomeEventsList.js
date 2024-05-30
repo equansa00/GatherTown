@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { fetchEvents } from '../../api/eventsService';
-import EventSearch from './EventSearch';
 import './EventsList.css';
 import { getDistanceFromLatLonInMiles } from '../../utils/geolocationUtils';
 
@@ -15,8 +14,7 @@ const HomeEventsList = ({
 }) => {
   const [eventList, setEventList] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [searchParams, setSearchParams] = useState({});
-  const [eventsLimit, setEventsLimit] = useState(10); // Default limit
+  const [eventsLimit] = useState(10); // Default limit
 
   const logMessage = (message) => {
     console.log(`[HomeEventsList] ${message}`);
@@ -70,7 +68,7 @@ const HomeEventsList = ({
     if (userLocation) {
       setEventList([]);
       setCurrentPage(0);
-      loadEvents(0, searchParams, eventsLimit);
+      loadEvents(0, {}, eventsLimit);
     }
   }, [userLocation, loadEvents, eventsLimit]);
 
@@ -81,25 +79,11 @@ const HomeEventsList = ({
 
   const handleLoadMore = () => {
     logMessage(`Loading more events for page ${currentPage}`);
-    loadEvents(currentPage, searchParams, eventsLimit);
-  };
-
-  const handleLimitChange = (event) => {
-    const newLimit = parseInt(event.target.value, 10);
-    logMessage(`Limit changed to ${newLimit}`);
-    setEventsLimit(newLimit);
+    loadEvents(currentPage, {}, eventsLimit);
   };
 
   return (
     <div className="events-list-container">
-      <EventSearch setSearchParams={setSearchParams} />
-      <select onChange={handleLimitChange} value={eventsLimit}>
-        <option value="10">Show 10</option>
-        <option value="20">Show 20</option>
-        <option value="30">Show 30</option>
-        <option value="40">Show 40</option>
-        <option value="50">Show 50</option>
-      </select>
       <div className="events-list">
         {eventList.map((event) => (
           <div 
@@ -127,4 +111,3 @@ const HomeEventsList = ({
 };
 
 export default HomeEventsList;
-

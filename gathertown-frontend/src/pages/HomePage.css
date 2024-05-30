@@ -1,121 +1,105 @@
-/* General page styles */
-body {
-  background-color: #bebbbb; /* Dark grey background */
-  color: #ffffff; /* White text color */
-  font-family: Arial, sans-serif;
+/* General Styling */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif; 
+    background-color: #f5f5f5;
+    color: #333; 
 }
 
-.outer-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+/* Container */
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0 auto;
 }
 
-/* Header styling */
+#root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
 .header {
-  background-color: #1a1a1a; /* Darker grey for the header */
-  color: #ffffff;
-  text-align: center;
-  padding: 1em;
-  font-size: 1.5em;
+    background-color: #282c34;
+    color: white;
+    padding: 15px;
+    width: 100%;
+    z-index: 100; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
 }
 
-/* Navbar styling */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  background-color: #333333; /* Dark grey for the navbar */
-  padding: 0.5em 1em;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.header input[type="text"], .header button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
 }
 
-.navbar a {
-  color: #ffffff;
-  text-decoration: none;
-  margin: 0 1em;
-  font-weight: bold;
+.header input[type="text"] {
+    width: 250px; 
+    font-size: 16px; 
 }
 
-.navbar a:hover {
-  color: #4CAF50; /* Light green on hover */
+.header button {
+    background-color: #61dafb; 
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease; 
 }
 
-/* Footer styling */
-.footer {
-  background-color: #1a1a1a;
-  color: #ffffff;
-  text-align: center;
-  padding: 1em;
-  margin-top: auto;
+.header button:hover {
+    background-color: #00aced; 
 }
 
-/* Main content area divided into three columns */
+/* Main Content */
 .main-content {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 1em;
-  padding: 1em;
-  background-color: #2e2e2e;
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 140px); /* Adjust for header and footer */
+    padding: 20px;
+    margin-bottom: 60px;
 }
 
-/* Map container styling */
+/* Columns */
 .map-container {
-  grid-column: 3;
-  position: sticky;
-  top: 1em;
+    width: 35%;
+    height: calc(100vh - 100px); /* Adjust for header */
+    position: sticky;
+    top: 100px; /* Adjust based on your header height */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-/* Events section styling */
 .events-section {
-  grid-column: 2;
-  background-color: #333333;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  padding: 1em;
+    width: 35%;
+    margin: 0 10px;
+    overflow-y: auto;
 }
 
-/* Event details section styling */
 .event-details {
-  grid-column: 1;
-  background-color: #333333;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  padding: 1em;
-}
-
-/* Event item styling */
-.event-item {
-  margin-bottom: 1em;
-  padding: 1em;
-  background-color: #444444;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+    width: 30%;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
 }
 
 .event-item:hover {
-  background-color: #555555;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Button styling */
-button {
-  background-color: #4CAF50;
-  color: #ffffff;
-  border: none;
-  padding: 0.5em 1em;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 1em;
-  margin: 0.5em 0;
-  cursor: pointer;
-  border-radius: 4px;
+.featured-event {
+    animation: fade 1s ease-in-out;
 }
-
-button:hover {
-  background-color: #45a049;
-}
-
-/* Text styling for event details */
-.event-details p {
-  margin: 0.5em 0;
+  
+@keyframes fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
