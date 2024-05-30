@@ -21,6 +21,17 @@ axios.interceptors.response.use(response => {
 
 const API_URL = 'http://localhost:5000/api/events';
 
+export const fetchRandomEvents = async (count = 5) => {
+  try {
+    const response = await axios.get(`${API_URL}/random`, {
+      params: { count }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error('Error fetching random events');
+  }
+};
+
 export const fetchEvents = async (params) => {
   try {
     logMessage(`Fetching events with params: ${JSON.stringify(params)}`);

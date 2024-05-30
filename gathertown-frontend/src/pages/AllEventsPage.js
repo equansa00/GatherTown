@@ -3,18 +3,18 @@ import { fetchAllEvents } from '../api/eventsService';
 import AllEventsList from '../features/events/AllEventsList';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
-import EventSearch from '../features/events/EventSearch'; // Import EventSearch
+import EventSearch from '../features/events/EventSearch'; 
 
 const AllEventsPage = () => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchParams, setSearchParams] = useState({}); // State to hold search parameters
+  const [searchParams, setSearchParams] = useState({});
 
   useEffect(() => {
     const getAllEvents = async () => {
       try {
-        const fetchedEvents = await fetchAllEvents(searchParams); // Use searchParams in the fetch call
+        const fetchedEvents = await fetchAllEvents(searchParams); 
         setEvents(fetchedEvents);
       } catch (err) {
         setError('Failed to load events');
@@ -25,7 +25,7 @@ const AllEventsPage = () => {
     };
 
     getAllEvents();
-  }, [searchParams]); // Add searchParams as a dependency to refetch events when they change
+  }, [searchParams]); 
 
   const handleEventClick = (event) => {
     console.log('Event clicked:', event);

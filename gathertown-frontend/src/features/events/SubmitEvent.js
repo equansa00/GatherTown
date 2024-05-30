@@ -25,7 +25,6 @@ const SubmitEvent = () => {
     try {
       const response = await addEvent(eventData);
       console.log('Event submitted successfully:', response);
-      // Optionally, reset form fields here
     } catch (error) {
       console.error('Error submitting event:', error);
     }

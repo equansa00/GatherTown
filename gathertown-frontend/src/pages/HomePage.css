@@ -60,7 +60,7 @@ body, html {
 .main-content {
     display: flex;
     flex-direction: row;
-    height: calc(100vh - 140px); /* Adjust for header and footer */
+    height: calc(100vh - 140px);
     padding: 20px;
     margin-bottom: 60px;
 }
@@ -68,9 +68,9 @@ body, html {
 /* Columns */
 .map-container {
     width: 35%;
-    height: calc(100vh - 100px); /* Adjust for header */
+    height: calc(100vh - 100px); 
     position: sticky;
-    top: 100px; /* Adjust based on your header height */
+    top: 100px; 
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;

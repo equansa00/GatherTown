@@ -20,7 +20,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(`http://localhost:5000/api/reset-password/${token}`, {
-        password  // Make sure to send the object with a key as expected by the backend
+        password
       });
       setMessage(response.data.message || 'Password has been reset successfully. You can now login with your new password.');
       setError('');

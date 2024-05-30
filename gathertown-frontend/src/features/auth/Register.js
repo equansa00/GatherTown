@@ -27,7 +27,6 @@ const RegisterForm = () => {
         try {
             const response = await registerUser(formData);
             console.log('Registration successful', response);
-            // Clear form and errors
             setErrors({});
             setFormData({
                 email: '',

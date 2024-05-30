@@ -10,7 +10,7 @@
       "sourceType": "module"
     },
     "rules": {
-      "no-undef": "warn" // This changes the rule for undefined variables to a warning instead of an error.
+      "no-undef": "warn"
     },
     "globals": {
       "google": "readonly"

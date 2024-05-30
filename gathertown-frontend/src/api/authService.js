@@ -95,7 +95,7 @@ export const submitEvent = async (eventData) => {
 export const forgotPassword = async (email) => {
   try {
     const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
-    return response.data;  // This should match the backend endpoint
+    return response.data; 
   } catch (error) {
     throw new Error('Failed to send password reset email.');
   }
