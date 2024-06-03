@@ -2,64 +2,137 @@ const Event = require('../models/Event');
 const { validationResult } = require('express-validator');
 const axios = require('axios');
 const logger = require('../config/logger');
-
-// Middleware for logging requests
-const logRequestDetails = (req) => {
-  logger.info({
-    method: req.method,
-    path: req.originalUrl,
-    params: req.params,
-    query: req.query,
-    body: req.body,
-    headers: req.headers,
-    userId: req.user ? req.user.id : 'Guest',
-    sessionID: req.sessionID ? req.sessionID : 'No session',
-  });
-};
+const cloudinary = require('../config/cloudinary');
 
 // Helper functions
 const handleNotFound = (res, message) => res.status(404).json({ msg: message });
 const handleServerError = (res, error) => {
-  console.error('Server Error:', error);
+  logger.error('Server Error:', error);
   return res.status(500).json({ error: 'Server error', details: error.message });
+};
+
+// Function to upload image
+const uploadImage = async (imagePath) => {
+  try {
+    const result = await cloudinary.uploader.upload(imagePath, {
+      folder: 'events',
+    });
+    return result.secure_url;
+  } catch (error) {
+    throw new Error('Image upload failed');
+  }
+};
+
+// Build the filter object based on query parameters
+const buildFilter = (query) => {
+  const filter = {};
+
+  if (query.title) {
+    filter.title = new RegExp(query.title, 'i'); // Case-insensitive search
+  }
+  if (query.category) {
+    filter.category = new RegExp(query.category, 'i'); // Case-insensitive search
+  }
+  if (query.country) {
+    filter['location.country'] = query.country;
+  }
+  if (query.state) {
+    filter['location.state'] = query.state;
+  }
+  if (query.city) {
+    filter['location.city'] = query.city;
+  }
+  if (query.zipCode) {
+    filter['location.zipCode'] = query.zipCode;
+  }
+  if (query.startDate || query.endDate) {
+    filter.date = {};
+    if (query.startDate) {
+      filter.date.$gte = new Date(query.startDate);
+    }
+    if (query.endDate) {
+      filter.date.$lte = new Date(query.endDate);
+    }
+  }
+
+  return filter;
+};
+
+// Function to get events with RSVP status for a user
+const getEventsWithRSVPStatus = async (userId, filter, skip, limit) => {
+  try {
+    const events = await Event.find(filter).skip(skip).limit(limit);
+    const eventsWithRSVPStatus = events.map(event => {
+      const isRSVPed = event.attendees.includes(userId);
+      return {
+        ...event._doc,
+        isRSVPed
+      };
+    });
+    return eventsWithRSVPStatus;
+  } catch (error) {
+    throw new Error('Failed to fetch events with RSVP status');
+  }
 };
 
 // Get events with pagination, filtering, keyword search, and date range
 exports.getEvents = async (req, res) => {
-  logRequestDetails(req);
+  const { page = 0, limit = 10 } = req.query;
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+
+  if (isNaN(pageNum) || isNaN(limitNum)) {
+    return res.status(400).json({ message: "Page and limit must be valid numbers" });
+  }
+
+  const filter = buildFilter(req.query);
+
   try {
-    const { lat, lng, page = 0, limit = 10 } = req.query;
-    logger.info(`Fetching events with parameters: lat=${lat}, lng=${lng}, page=${page}, limit=${limit}`);
+    const events = await Event.find(filter)
+      .skip(pageNum * limitNum)
+      .limit(limitNum);
+    
+    const totalEvents = await Event.countDocuments(filter);
 
-    const events = await Event.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(lng), parseFloat(lat)]
-          },
-          $maxDistance: 10000
-        }
-      }
-    })
-      .skip(page * limit)
-      .limit(parseInt(limit, 10));
-
-    logger.info(`Fetched ${events.length} events.`);
-    res.status(200).json(events);
+    res.status(200).json({
+      events,
+      totalEvents,
+      page: pageNum,
+      totalPages: Math.ceil(totalEvents / limitNum),
+    });
   } catch (error) {
-    logger.error(`Error fetching events: ${error.message}`, error);
-    res.status(500).json({ message: error.message });
+    handleServerError(res, error);
   }
 };
 
-// Get all events without any filtering or pagination
+// Get all events with optional filtering
 exports.getAllEvents = async (req, res) => {
+  const { category, country, state, page = 0, limit = 10 } = req.query;
+
+  const filters = {};
+  if (category) filters.category = category;
+  if (country) filters["location.country"] = country;
+  if (state) filters["location.state"] = state;
+
   try {
-    const events = await Event.find({});
-    res.json(events);
+    const events = await Event.find(filters)
+      .skip(page * limit)
+      .limit(parseInt(limit));
+    const totalEvents = await Event.countDocuments(filters);
+    const totalPages = Math.ceil(totalEvents / limit);
+    res.status(200).json({ events, totalEvents, page, totalPages });
   } catch (error) {
-    handleServerError(res, error);
+    res.status(500).json({ message: 'Failed to fetch events', error });
+  }
+};
+
+// Function to get all unique categories
+exports.getAllCategories = async (req, res) => {
+  try {
+    const categories = await Event.distinct('category');
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -70,10 +143,30 @@ exports.createEvent = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { title, description, date, location, category, time, creator, images } = req.body;
+  const { title, description, date, location, category, time, creator } = req.body;
+  let imageUrl = '';
 
   try {
-    const event = new Event({ title, description, date, location, category, time, creator, images });
+    if (req.file) {
+      imageUrl = await uploadImage(req.file.path);
+    }
+
+    const event = new Event({
+      title,
+      description,
+      date,
+      location: {
+        type: "Point",
+        coordinates: location.coordinates,
+        country: location.country, // Ensure country is set
+        state: location.state, // Ensure state is set
+        city: location.city || "Unknown", // Ensure city is set
+      },
+      category,
+      time,
+      creator,
+      images: [imageUrl]
+    });
     await event.save();
     res.status(201).json({ message: 'Event created successfully', event });
   } catch (error) {
@@ -114,21 +207,29 @@ exports.deleteEvent = async (req, res) => {
 
 // RSVP to an event
 exports.rsvpToEvent = async (req, res) => {
-  const userId = req.user._id;
   try {
-    const event = req.event;
+    const userId = req.user.id; // Ensure this is correctly retrieved from the authenticated user
+    const eventId = req.params.id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
     if (!event.attendees) {
       event.attendees = [];
     }
+
     if (!event.attendees.includes(userId)) {
       event.attendees.push(userId);
       await event.save();
       res.json({ message: 'RSVP successful', event });
     } else {
-      res.json({ message: 'User already RSVPed to this event' });
+      res.status(400).json({ message: 'User already RSVPed to this event' });
     }
   } catch (error) {
-    handleServerError(res, error);
+    console.error('RSVP Error:', error);
+    res.status(500).json({ message: 'Failed to RSVP', error: error.message });
   }
 };
 
@@ -147,9 +248,7 @@ exports.getEventById = async (req, res) => {
 
 // Get nearby events
 exports.getNearbyEvents = async (req, res) => {
-  logRequestDetails(req);
   const { lat, lng, maxDistance = 10000 } = req.query;
-  logger.info(`Received request to fetch nearby events with parameters: lat=${lat}, lng=${lng}, maxDistance=${maxDistance}`);
   
   try {
     const latitude = parseFloat(lat);
@@ -157,7 +256,6 @@ exports.getNearbyEvents = async (req, res) => {
     const distance = parseInt(maxDistance, 10);
 
     if (isNaN(latitude) || isNaN(longitude) || isNaN(distance)) {
-      logger.error('Invalid latitude, longitude, or distance parameters');
       return res.status(400).json({ error: 'Invalid latitude, longitude, or distance parameters' });
     }
 
@@ -169,10 +267,8 @@ exports.getNearbyEvents = async (req, res) => {
         }
       }
     });
-    logger.info(`Events fetched successfully: ${events.length} events found.`);
     res.status(200).json(events);
   } catch (error) {
-    logger.error("Failed to fetch nearby events", { error: error.message });
     res.status(500).json({ message: "Error fetching nearby events", error });
   }
 };
@@ -234,3 +330,59 @@ exports.getRandomEvents = async (req, res) => {
     handleServerError(res, error);
   }
 };
+
+// Fetch unique countries
+exports.getCountries = async (req, res) => {
+  try {
+    const countries = await Event.distinct("location.country");
+    res.status(200).json(countries);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Fetch unique states/regions based on selected country
+exports.getStates = async (req, res) => {
+  const { country } = req.query;
+  try {
+    const states = await Event.distinct("location.state", { "location.country": country });
+    res.status(200).json(states);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Fetch unique cities based on selected state/region
+exports.getCities = async (req, res) => {
+  const { country, state } = req.query;
+  try {
+    const cities = await Event.distinct("location.city", { "location.country": country, "location.state": state });
+    res.status(200).json(cities);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.searchEvents = async (req, res) => {
+  try {
+    const { country, state, city, streetAddress, zipCode, category, startDate, endDate, title } = req.query;
+    const query = {};
+
+    if (country) query["location.country"] = country;
+    if (state) query["location.state"] = state;
+    if (city) query["location.city"] = city;
+    if (streetAddress) query["location.streetAddress"] = { $regex: streetAddress, $options: "i" };
+    if (zipCode) query["location.zipCode"] = zipCode;
+    if (category) query.category = category;
+    if (startDate || endDate) query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
+    if (title) query.title = { $regex: title, $options: "i" };
+
+    const events = await Event.find(query);
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

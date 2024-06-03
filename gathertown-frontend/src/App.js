@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import EventsPage from './features/events/EventsPage';
 import HomePage from './pages/HomePage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -50,6 +51,7 @@ const App = () => {
                 />
               } 
             />
+            <Route path="/events" component={EventsPage} />
             <Route path="/submit" element={<SubmitEvent />} />
             <Route path="/all-events" element={<AllEventsPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

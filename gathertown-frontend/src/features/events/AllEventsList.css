@@ -1,0 +1,80 @@
+/* src/features/events/EventsList.css */
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.event-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
+  transition: box-shadow 0.3s ease, background-color 0.3s;
+  cursor: pointer;
+}
+
+.event-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-item h3 {
+  margin: 0 0 10px;
+}
+
+.event-item p {
+  margin: 5px 0;
+}
+
+.event-item img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+.event-item button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.event-item button:hover {
+  background-color: #0056b3;
+}
+
+.event-item.expanded {
+  background-color: #eaeaea;
+}
+
+.event-description {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+}
+
+.event-item.expanded .event-description {
+  max-height: 500px; /* Adjust based on the expected maximum height of the description */
+  padding-top: 10px;
+}
+
+.load-more {
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.load-more:hover {
+  background-color: #0056b3;
+}

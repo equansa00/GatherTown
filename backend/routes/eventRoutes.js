@@ -1,10 +1,31 @@
+// src/routes/eventRoutes.js
 const express = require('express');
 const { body } = require('express-validator');
-const router = express.Router();
-const eventController = require('../controllers/eventController');
+const {
+  getNearbyEvents,
+  getEventsByZip,
+  getFeaturedEvents,
+  getRandomEvents,
+  getAllEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  rsvpToEvent,
+  getCountries,
+  getStates,
+  getCities,
+  getEvents,
+  getAllCategories,
+  searchEvents
+} = require('../controllers/eventController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { checkEventExists, isAuthorized } = require('../helpers/eventHelpers');
 const logger = require('../config/logger');
+const multer = require('multer');
+
+const router = express.Router();
+const upload = multer({ dest: 'uploads/' }); // Temp storage
 
 // Middleware to log request details
 const logRequestDetails = (req, res, next) => {
@@ -34,21 +55,56 @@ const eventValidation = [
 ];
 
 // Public Event Routes
-router.get('/nearby', eventController.getNearbyEvents);
-router.get('/byZip', eventController.getEventsByZip);
-router.get('/featured', eventController.getFeaturedEvents);
-router.get('/random', eventController.getRandomEvents);
-router.get('/all', eventController.getAllEvents); 
-router.get('/:id', checkEventExists, eventController.getEventById);
+router.get('/nearby', getNearbyEvents);
+router.get('/zip', getEventsByZip);
+router.get('/featured', getFeaturedEvents);
+router.get('/random', getRandomEvents);
+router.get('/all', getAllEvents);
 
-// Protected Event Routes (Require Authentication)
-router.post('/', authMiddleware, eventValidation, eventController.createEvent);
-router.put('/:id', authMiddleware, checkEventExists, isAuthorized, eventValidation, eventController.updateEvent);
-router.delete('/:id', authMiddleware, checkEventExists, isAuthorized, eventController.deleteEvent);
-router.post('/:id/rsvp', authMiddleware, checkEventExists, eventController.rsvpToEvent);
+// Specific routes before the parameterized route
+router.get('/countries', getCountries);
+router.get('/states', getStates);
+router.get('/cities', getCities);
+router.get('/categories', getAllCategories);
 
 // Combined Route for Event Listing
-router.get(['/events', '/'], eventController.getEvents);
+router.get('/events', getAllEvents);
+router.get('/', getEvents);
+
+router.get('/:id', checkEventExists, getEventById);
+
+// Protected Event Routes (Require Authentication)
+router.post(
+  '/',
+  authMiddleware,
+  upload.single('image'),
+  eventValidation,
+  createEvent
+);
+
+router.put(
+  '/:id',
+  authMiddleware,
+  checkEventExists,
+  isAuthorized,
+  eventValidation,
+  updateEvent
+);
+
+router.delete(
+  '/:id',
+  authMiddleware,
+  checkEventExists,
+  isAuthorized,
+  deleteEvent
+);
+
+router.post(
+  '/:id/rsvp',
+  authMiddleware,
+  checkEventExists,
+  rsvpToEvent
+);
 
 // Logging configured routes
 router.stack.forEach((layer) => {

@@ -7,12 +7,12 @@ const logMessage = (message) => {
 
 // Logging all requests and responses
 axios.interceptors.request.use(request => {
-  // console.log('Starting Request', JSON.stringify(request, null, 2));
+  console.log(`Request: ${JSON.stringify(request, null, 2)}`);
   return request;
 });
 
 axios.interceptors.response.use(response => {
-  // console.log('Response:', JSON.stringify(response, null, 2));
+  console.log(`Response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }, error => {
   console.log('Error:', error.response ? JSON.stringify(error.response, null, 2) : error.message);
@@ -23,11 +23,11 @@ const API_URL = 'http://localhost:5000/api/events';
 
 export const fetchRandomEvents = async (count = 5) => {
   try {
-    const response = await axios.get(`${API_URL}/random`, {
-      params: { count }
-    });
+    const response = await axios.get(`${API_URL}/random`, { params: { count } });
+    logMessage(`Fetched random events: ${response.data.length}`);
     return response.data;
   } catch (error) {
+    logMessage('Error fetching random events');
     throw new Error('Error fetching random events');
   }
 };
@@ -36,7 +36,7 @@ export const fetchEvents = async (params) => {
   try {
     logMessage(`Fetching events with params: ${JSON.stringify(params)}`);
     const response = await axios.get(API_URL, { params });
-    logMessage(`Fetched ${response.data.length} events`);
+    logMessage(`Fetched ${response.data.events.length} events`);
     return response.data;
   } catch (error) {
     logMessage(`Error fetching events: ${error.message}`);
@@ -44,125 +44,152 @@ export const fetchEvents = async (params) => {
   }
 };
 
-export const fetchAllEvents = async (params = {}) => { // Default to empty object if no params
+export const fetchAllEvents = async (params) => {
   try {
-    const response = await axios.get(`${API_URL}/all`, { params, headers: getAuthHeader() });
-    console.log('fetchAllEvents response data:', response.data);
+    const response = await axios.get(API_URL, { params });
     return response.data;
   } catch (error) {
-    console.error('Error fetching all events:', error);
-    throw new Error('Error fetching all events');
+    console.error('Error fetching events:', error);
+    throw error;
+  }
+};
+
+
+export const fetchCountries = async () => {
+  try {
+    const response = await axios.get('/api/events/countries');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    throw error;
+  }
+};
+
+export const fetchStates = async (country) => {
+  try {
+    const response = await axios.get(`/api/events/states?country=${country}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching states:', error);
+    throw error;
+  }
+};
+
+export const fetchCities = async (country, state) => {
+  try {
+    const response = await axios.get(`/api/events/cities?country=${country}&state=${state}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching cities:', error);
+    throw error;
   }
 };
 
 export const fetchEventsByZip = async (zipCode, page = 0) => {
   const url = `${API_URL}/by-zip`;
-  console.log(`Fetching events by zip code: ${zipCode}, page: ${page}`);
+  logMessage(`Fetching events by zip code: ${zipCode}, page: ${page}`);
   
   try {
     const response = await axios.get(url, {
       headers: getAuthHeader(),
       params: { zipCode, page }
     });
-    console.log('fetchEventsByZip response data:', response.data);
+    logMessage(`Fetched events by zip: ${response.data.length}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching events by zip:', error);
+    logMessage('Error fetching events by zip');
     handleAxiosError(error);
     throw error;
   }
 };
 
 export const addEvent = async (eventData) => {
-  console.log("Adding event:", eventData);
+  logMessage("Adding event:", eventData);
   try {
     const response = await axios.post(API_URL, eventData, { headers: getAuthHeader() });
-    console.log('Event added successfully:', JSON.stringify(response.data, null, 2));
+    logMessage('Event added successfully');
     return response.data;
   } catch (error) {
-    console.error('Error adding event:', error);
+    logMessage('Error adding event');
     handleAxiosError(error);
     throw error;
   }
 };
 
 export const getEventDetails = async (id) => {
-  console.log(`Fetching event details for ID: ${id}`);
+  logMessage(`Fetching event details for ID: ${id}`);
   try {
     const response = await axios.get(`${API_URL}/${id}`, { headers: getAuthHeader() });
-    console.log('Event details fetched successfully:', JSON.stringify(response.data, null, 2));
+    logMessage(`Event details fetched successfully`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching event details:', error);
-    handleAxiosError(error);
+    logMessage(`Error fetching event details: ${error.message}`);
     throw error;
   }
 };
 
 export const updateEvent = async (id, eventData) => {
-  console.log(`Updating event ID: ${id}`, eventData);
+  logMessage(`Updating event ID: ${id}`, eventData);
   try {
     const response = await axios.put(`${API_URL}/${id}`, eventData, { headers: getAuthHeader() });
-    console.log('Event updated successfully:', JSON.stringify(response.data, null, 2));
+    logMessage('Event updated successfully');
     return response.data;
   } catch (error) {
-    console.error('Error updating event:', error);
+    logMessage('Error updating event');
     handleAxiosError(error);
     throw error;
   }
 };
 
 export const deleteEvent = async (id) => {
-  console.log(`Deleting event ID: ${id}`);
+  logMessage(`Deleting event ID: ${id}`);
   try {
     const response = await axios.delete(`${API_URL}/${id}`, { headers: getAuthHeader() });
-    console.log('Event deleted successfully:', JSON.stringify(response.data, null, 2));
+    logMessage('Event deleted successfully');
     return response.data;
   } catch (error) {
-    console.error('Error deleting event:', error);
+    logMessage('Error deleting event');
     handleAxiosError(error);
     throw error;
   }
 };
 
 export const rsvpToEvent = async (eventId) => {
-  console.log(`RSVPing to event ID: ${eventId}`);
+  console.log(`[rsvpToEvent] RSVPing to event ID: ${eventId}`);
   try {
     const response = await axios.post(`${API_URL}/${eventId}/rsvp`, {}, { headers: getAuthHeader() });
-    console.log('RSVP successful:', JSON.stringify(response.data, null, 2));
+    console.log(`[rsvpToEvent] RSVP successful. Response data: ${JSON.stringify(response.data)}`);
     return response.data;
   } catch (error) {
-    console.error('Error RSVPing to event:', error);
-    handleAxiosError(error);
+    console.error(`[rsvpToEvent] Error RSVPing to event: ${error.message}`);
     throw error;
+  } finally {
+    console.log('[rsvpToEvent] Finished RSVP process');
   }
 };
 
 const handleAxiosError = (error) => {
   if (error.response) {
-    console.error('Error response:', {
+    logMessage('Error response:', {
       data: error.response.data,
       status: error.response.status,
       headers: error.response.headers,
     });
   } else if (error.request) {
-    console.error('No response received:', error.request);
+    logMessage('No response received:', error.request);
   } else {
-    console.error('Error setting up request:', error.message);
+    logMessage('Error setting up request:', error.message);
   }
 };
 
-const getEvents = (lat, lng, page = 0) => {
-  return axios.get(API_URL, {
-    params: {
-      lat,
-      lng,
-      page
-    },
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  });
+export default {
+  fetchRandomEvents,
+  fetchEvents,
+  fetchAllEvents,
+  fetchEventsByZip,
+  addEvent,
+  getEventDetails,
+  updateEvent,
+  deleteEvent,
+  rsvpToEvent,
 };
-
-export default { getEvents };

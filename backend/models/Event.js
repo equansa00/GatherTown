@@ -1,6 +1,39 @@
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
 
+const locationSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    required: true
+  },
+  coordinates: {
+    type: [Number],
+    required: true,
+    validate: {
+      validator: ([lng, lat]) => lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90,
+      message: 'Coordinates must be valid longitude and latitude values',
+    },
+  },
+  streetAddress: String,
+  city: {
+    type: String,
+    required: [true, 'City is required']
+  },
+  state: {
+    type: String,
+    required: [true, 'State is required']
+  },
+  zipCode: {
+    type: String,
+    required: [true, 'Zip Code is required']
+  },
+  country: {
+    type: String,
+    required: [true, 'Country is required']
+  },
+}, { _id: false });
+
 const eventSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -21,26 +54,7 @@ const eventSchema = new mongoose.Schema({
     },
     index: true,
   },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      required: [true, 'Location type is required'],
-      default: 'Point',
-    },
-    coordinates: {
-      type: [Number],
-      required: [true, 'Coordinates are required'],
-      validate: {
-        validator: ([lng, lat]) => lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90,
-        message: 'Coordinates must be valid longitude and latitude values',
-      },
-    },
-    address: {
-      type: String,
-      default: 'Unknown Address',
-    },
-  },
+  location: locationSchema,
   category: {
     type: String,
     required: [true, 'Category is required'],
@@ -50,8 +64,7 @@ const eventSchema = new mongoose.Schema({
   creator: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'Creator is required'],
-  },
+  }, // Not required
   isFeatured: {
     type: Boolean,
     default: false,
@@ -63,6 +76,10 @@ const eventSchema = new mongoose.Schema({
   images: [{
     type: String,
     required: true,
+  }],
+  attendees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   }],
 });
 

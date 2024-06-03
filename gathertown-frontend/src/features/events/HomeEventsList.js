@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { fetchRandomEvents, rsvpToEvent } from '../../api/eventsService'; // Adjusted import
-import './EventsList.css';
+import './AllEventsList';
 import { getDistanceFromLatLonInMiles } from '../../utils/geolocationUtils';
 
 const HomeEventsList = ({ 
