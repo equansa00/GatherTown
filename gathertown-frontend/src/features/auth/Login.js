@@ -1,8 +1,7 @@
-//gathertown-frontend/src/features/auth/Login.js
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { forgotPassword } from '../../api/authService'; 
+import { forgotPassword } from '../../api/authService'; // Correctly import the login function
 
 const Login = () => {
   const { user, loginUser } = useAuth();
@@ -21,8 +20,9 @@ const Login = () => {
     }
 
     try {
-      const response = await loginUser({ email, password });
+      const response = await loginUser({ email, password }); // Use the correct login function
       if (response.user) {
+        console.log('Login successful:', response.user);
         navigate('/');
       } else {
         setError(response.message || 'Login failed. Please check your credentials and try again.');

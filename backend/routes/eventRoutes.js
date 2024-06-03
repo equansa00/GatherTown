@@ -62,6 +62,8 @@ router.get('/random', getRandomEvents);
 router.get('/all', getAllEvents);
 
 // Specific routes before the parameterized route
+router.get('/events/nearby', getNearbyEvents);
+
 router.get('/countries', getCountries);
 router.get('/states', getStates);
 router.get('/cities', getCities);

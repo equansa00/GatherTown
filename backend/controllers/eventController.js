@@ -58,25 +58,9 @@ const buildFilter = (query) => {
   return filter;
 };
 
-// Function to get events with RSVP status for a user
-const getEventsWithRSVPStatus = async (userId, filter, skip, limit) => {
-  try {
-    const events = await Event.find(filter).skip(skip).limit(limit);
-    const eventsWithRSVPStatus = events.map(event => {
-      const isRSVPed = event.attendees.includes(userId);
-      return {
-        ...event._doc,
-        isRSVPed
-      };
-    });
-    return eventsWithRSVPStatus;
-  } catch (error) {
-    throw new Error('Failed to fetch events with RSVP status');
-  }
-};
-
 // Get events with pagination, filtering, keyword search, and date range
 exports.getEvents = async (req, res) => {
+  console.log('Received query params:', req.query); // Log received query params
   const { page = 0, limit = 10 } = req.query;
   const pageNum = parseInt(page, 10);
   const limitNum = parseInt(limit, 10);
@@ -87,11 +71,10 @@ exports.getEvents = async (req, res) => {
 
   const filter = buildFilter(req.query);
 
+  console.log('Constructed filter:', filter); // Log constructed filter
+
   try {
-    const events = await Event.find(filter)
-      .skip(pageNum * limitNum)
-      .limit(limitNum);
-    
+    const events = await Event.find(filter).skip(pageNum * limitNum).limit(limitNum);
     const totalEvents = await Event.countDocuments(filter);
 
     res.status(200).json({
@@ -101,9 +84,10 @@ exports.getEvents = async (req, res) => {
       totalPages: Math.ceil(totalEvents / limitNum),
     });
   } catch (error) {
-    handleServerError(res, error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
+
 
 // Get all events with optional filtering
 exports.getAllEvents = async (req, res) => {
@@ -247,9 +231,11 @@ exports.getEventById = async (req, res) => {
 };
 
 // Get nearby events
+// src/controllers/eventController.js
+
 exports.getNearbyEvents = async (req, res) => {
   const { lat, lng, maxDistance = 10000 } = req.query;
-  
+
   try {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
@@ -266,12 +252,14 @@ exports.getNearbyEvents = async (req, res) => {
           $maxDistance: distance
         }
       }
-    });
+    }).sort({ date: 1 }); // Sort by date in ascending order
+
     res.status(200).json(events);
   } catch (error) {
     res.status(500).json({ message: "Error fetching nearby events", error });
   }
 };
+
 
 // Get events by zip code
 exports.getEventsByZip = async (req, res) => {

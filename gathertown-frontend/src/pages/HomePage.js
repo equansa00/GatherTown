@@ -6,9 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
 import { fetchEvents } from '../api/eventsService';
-import './HomePage.css';  // Import the new CSS file
+import './HomePage.css';
 
-const defaultPosition = { lat: 40.730610, lng: -73.935242 };
+const defaultPosition = { lat: 40.73061, lng: -73.935242 };
 
 const HomePage = () => {
   const [events, setEvents] = useState([]);
@@ -102,3 +102,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
