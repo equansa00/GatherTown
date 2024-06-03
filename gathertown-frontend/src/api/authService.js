@@ -106,3 +106,16 @@ export const forgotPassword = async (email) => {
 export const resetPassword = async (token, password) => {
   return await axios.post(`${API_URL}/reset-password/${token}`, { password });
 };
+
+// Function to fetch events nearby
+export const fetchEventsNearby = async ({ lat, lng }) => {
+  try {
+    const response = await axios.get(`${API_URL}/events/nearby`, {
+      params: { lat, lng },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching nearby events:', error);
+    throw error;
+  }
+};

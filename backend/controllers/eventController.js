@@ -3,6 +3,8 @@ const { validationResult } = require('express-validator');
 const axios = require('axios');
 const logger = require('../config/logger');
 const cloudinary = require('../config/cloudinary');
+const { getDistanceFromLatLonInMiles } = require('../utils/geolocationUtils'); // Import the utility function
+
 
 // Helper functions
 const handleNotFound = (res, message) => res.status(404).json({ msg: message });
@@ -231,10 +233,8 @@ exports.getEventById = async (req, res) => {
 };
 
 // Get nearby events
-// src/controllers/eventController.js
-
 exports.getNearbyEvents = async (req, res) => {
-  const { lat, lng, maxDistance = 10000 } = req.query;
+  const { lat, lng, maxDistance = 160934 } = req.query; // Default maxDistance is 100 miles in meters
 
   try {
     const latitude = parseFloat(lat);
@@ -252,14 +252,19 @@ exports.getNearbyEvents = async (req, res) => {
           $maxDistance: distance
         }
       }
-    }).sort({ date: 1 }); // Sort by date in ascending order
+    }).lean().sort({ date: 1 }); // Sort by date in ascending order
 
-    res.status(200).json(events);
+    // Calculate the distance for each event and add it to the event data
+    const eventsWithDistance = events.map(event => {
+      const eventDistance = getDistanceFromLatLonInMiles(latitude, longitude, event.location.coordinates[1], event.location.coordinates[0]);
+      return { ...event, distance: eventDistance };
+    });
+
+    res.status(200).json(eventsWithDistance);
   } catch (error) {
     res.status(500).json({ message: "Error fetching nearby events", error });
   }
 };
-
 
 // Get events by zip code
 exports.getEventsByZip = async (req, res) => {

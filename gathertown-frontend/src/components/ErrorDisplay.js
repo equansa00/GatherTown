@@ -4,7 +4,7 @@ import './ErrorDisplay.css';
 function ErrorDisplay({ message }) {
   return (
     <div className="error-display">
-      {/* Style this as needed to make it visually distinct */}
+      {/* distinct Style */}
       <p>{message}</p>
     </div>
   );

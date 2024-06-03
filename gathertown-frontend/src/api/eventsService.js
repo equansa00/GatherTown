@@ -21,10 +21,16 @@ axios.interceptors.response.use(response => {
 
 const API_URL = 'http://localhost:5000/api/events';
 
-export const fetchNearbyEvents = (lat, lng) => {
-  return axios.get('/api/events/nearby', {
-    params: { lat, lng, maxDistance: 10000 }
-  });
+export const fetchEventsNearby = async ({ lat, lng, maxDistance = 160934, page = 0, limit = 5 }) => {
+  try {
+    const response = await axios.get(`${API_URL}/nearby`, {
+      params: { lat, lng, maxDistance, page, limit }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching nearby events:', error);
+    throw error;
+  }
 };
 
 export const fetchRandomEvents = async (count = 5) => {
