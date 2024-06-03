@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator');
 const axios = require('axios');
 const logger = require('../config/logger');
 const cloudinary = require('../config/cloudinary');
-const { getDistanceFromLatLonInMiles } = require('../utils/geolocationUtils'); // Import the utility function
+const { getDistanceFromLatLonInMiles } = require('../utils/geolocationUtils');
 
 
 // Helper functions
@@ -144,9 +144,9 @@ exports.createEvent = async (req, res) => {
       location: {
         type: "Point",
         coordinates: location.coordinates,
-        country: location.country, // Ensure country is set
-        state: location.state, // Ensure state is set
-        city: location.city || "Unknown", // Ensure city is set
+        country: location.country, 
+        state: location.state, 
+        city: location.city || "Unknown", 
       },
       category,
       time,
@@ -194,7 +194,7 @@ exports.deleteEvent = async (req, res) => {
 // RSVP to an event
 exports.rsvpToEvent = async (req, res) => {
   try {
-    const userId = req.user.id; // Ensure this is correctly retrieved from the authenticated user
+    const userId = req.user.id;
     const eventId = req.params.id;
 
     const event = await Event.findById(eventId);
@@ -234,15 +234,16 @@ exports.getEventById = async (req, res) => {
 
 // Get nearby events
 exports.getNearbyEvents = async (req, res) => {
-  const { lat, lng, maxDistance = 160934 } = req.query; // Default maxDistance is 100 miles in meters
+  const { lat, lng, maxDistance = 160934, limit = 5 } = req.query; 
 
   try {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lng);
     const distance = parseInt(maxDistance, 10);
+    const limitNum = parseInt(limit, 10);
 
-    if (isNaN(latitude) || isNaN(longitude) || isNaN(distance)) {
-      return res.status(400).json({ error: 'Invalid latitude, longitude, or distance parameters' });
+    if (isNaN(latitude) || isNaN(longitude) || isNaN(distance) || isNaN(limitNum)) {
+      return res.status(400).json({ error: 'Invalid latitude, longitude, distance, or limit parameters' });
     }
 
     const events = await Event.find({
@@ -252,9 +253,11 @@ exports.getNearbyEvents = async (req, res) => {
           $maxDistance: distance
         }
       }
-    }).lean().sort({ date: 1 }); // Sort by date in ascending order
+    })
+    .limit(limitNum)
+    .lean()
+    .sort({ date: 1 }); // Sort by date in ascending order
 
-    // Calculate the distance for each event and add it to the event data
     const eventsWithDistance = events.map(event => {
       const eventDistance = getDistanceFromLatLonInMiles(latitude, longitude, event.location.coordinates[1], event.location.coordinates[0]);
       return { ...event, distance: eventDistance };

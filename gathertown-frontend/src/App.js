@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import EventsPage from './features/events/EventsPage';
+import EventsPage from './features/events/AllEventsPage';
 import HomePage from './pages/HomePage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';

@@ -67,7 +67,7 @@ body, html {
 
 /* Columns */
 .map-container {
-    width: 35%;
+    width: 50%;
     height: calc(100vh - 100px); 
     position: sticky;
     top: 100px; 
@@ -77,13 +77,13 @@ body, html {
 }
 
 .events-section {
-    width: 35%;
+    width: 25%;
     margin: 0 10px;
     overflow-y: auto;
 }
 
 .event-details {
-    width: 30%;
+    width: 25%;
     overflow-y: auto;
     background-color: #fff;
     border: 1px solid #ddd;
@@ -102,4 +102,22 @@ body, html {
 @keyframes fade {
     0% { opacity: 0; }
     100% { opacity: 1; }
+}
+
+/* Additional Styling for Map and Event List Fusion */
+.map-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.map-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 50%;
+    background: none; /* Removed the fade effect */
+    pointer-events: none;
+    z-index: 1;
 }

@@ -11,12 +11,10 @@ body, html {
   min-height: 100vh;
 }
 
-
 main {
   flex: 1;
   padding: 20px;
 }
-
 
 body {
   margin: 0;
@@ -31,5 +29,4 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-
 

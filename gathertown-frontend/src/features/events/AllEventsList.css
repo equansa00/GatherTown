@@ -61,7 +61,7 @@
 }
 
 .event-item.expanded .event-description {
-  max-height: 500px; /* Adjust based on the expected maximum height of the description */
+  max-height: 500px; 
   padding-top: 10px;
 }
 

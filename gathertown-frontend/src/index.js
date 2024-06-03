@@ -1,20 +1,9 @@
 // src/index.js
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
 import App from './App';
-
-// function handleTouchStart(event) {
-//   const touch = event.touches[0];
-//   console.log(`Touch started at: (${touch.clientX}, ${touch.clientY})`);
-// }
-
-// function handleTouchMove(event) {
-//   const touch = event.touches[0];
-//   console.log(`Touch moved to: (${touch.clientX}, ${touch.clientY})`);
-// }
-
-// document.addEventListener('touchstart', handleTouchStart, { passive: true });
-// document.addEventListener('touchmove', handleTouchMove, { passive: true });
+// import './styles.css'; // Import the main CSS file
+import './App.css'; // Import universal styles
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
