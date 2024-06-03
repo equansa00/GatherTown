@@ -1,21 +1,14 @@
-/* General Styling */
+General Styling
 body, html {
     height: 100%;
     margin: 0;
-    font-family: 'Montserrat', sans-serif; 
-    background-color: #f5f5f5;
-    color: #333; 
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f5f5f5; /* Light gray background */
+    color: #333; /* Dark gray text */
 }
 
 /* Container */
-.container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    margin: 0 auto;
-}
-
-#root {
+.outer-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -23,101 +16,67 @@ body, html {
 
 /* Header */
 .header {
-    background-color: #282c34;
+    background: linear-gradient(to right, #4158D0, #C850C0, #FFCC70); /* Vibrant gradient */
     color: white;
-    padding: 15px;
-    width: 100%;
-    z-index: 100; 
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: center;
-}
-
-.header input[type="text"], .header button {
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
-}
-
-.header input[type="text"] {
-    width: 250px; 
-    font-size: 16px; 
-}
-
-.header button {
-    background-color: #61dafb; 
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease; 
-}
-
-.header button:hover {
-    background-color: #00aced; 
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
 }
 
 /* Main Content */
 .main-content {
     display: flex;
-    flex-direction: row;
-    height: calc(100vh - 140px);
+    justify-content: space-around; /* Evenly space the map and event sections */
     padding: 20px;
-    margin-bottom: 60px;
 }
 
-/* Columns */
+/* Map Container */
 .map-container {
-    width: 50%;
-    height: calc(100vh - 100px); 
-    position: sticky;
-    top: 100px; 
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    width: 60%;  /* Adjust map width as needed */
+    height: 600px; /* Set a fixed height or make responsive */
+    border-radius: 10px; /* Rounded corners */
     overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* More pronounced shadow */
 }
 
+/* Events Section */
 .events-section {
-    width: 25%;
-    margin: 0 10px;
-    overflow-y: auto;
+    width: 35%; /* Adjust events section width as needed */
+    background-color: #fff; /* White background */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    overflow-y: auto; /* Add scrollbar if content overflows */
+}
+.events-section h2 {
+    margin-top: 0; /* Remove default top margin */
 }
 
-.event-details {
-    width: 25%;
-    overflow-y: auto;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+.event-item {
+    border-bottom: 1px solid #eee; /* Subtle separator */
+    padding: 15px 0;
+    transition: transform 0.2s, box-shadow 0.2s; /* Add smooth transitions */
 }
-
 .event-item:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.featured-event {
-    animation: fade 1s ease-in-out;
+/* Event Details and Random Events */
+.event-details, .random-events { 
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px; /* Add space between sections */
+    overflow-y: auto;
 }
-  
-@keyframes fade {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+.event-details h2, .random-events h2 {
+    margin-top: 0;
+}
+.random-events { /* This is where you relocate the random events section */
+    margin-top: 20px; /* Add some spacing from the event details */
 }
 
-/* Additional Styling for Map and Event List Fusion */
-.map-container {
-    position: relative;
-    overflow: hidden;
-}
 
-.map-container::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 50%;
-    background: none; /* Removed the fade effect */
-    pointer-events: none;
-    z-index: 1;
-}
+

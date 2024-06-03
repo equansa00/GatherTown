@@ -6,7 +6,7 @@ import EventDetails from '../features/events/EventDetails';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
-import { fetchEvents, fetchRandomEvents } from '../api/eventsService'; // Adjusted import
+import { fetchEvents, fetchRandomEvents } from '../api/eventsService';
 import './HomePage.css';
 
 const defaultPosition = { lat: 40.730610, lng: -73.935242 };
@@ -14,12 +14,12 @@ const defaultPosition = { lat: 40.730610, lng: -73.935242 };
 const HomePage = () => {
   const { user} = useAuth();
   const [events, setEvents] = useState([]);
+  const [randomEvents, setRandomEvents] = useState([]);
   const [position, setPosition] = useState(defaultPosition);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [useStaticMap, setUseStaticMap] = useState(false); // Toggle for static map
-  const [randomEvents, setRandomEvents] = useState([]);
 
   const handleEventClick = useCallback((event) => {
     setSelectedEvent(event);
@@ -42,7 +42,9 @@ const HomePage = () => {
     setLoadError(null);
     try {
       const fetchedEvents = await fetchEvents({ lat: position.lat, lng: position.lng, page });
+      const fetchedRandomEvents = await fetchRandomEvents(); // Fetch random events
       setEvents(fetchedEvents);
+      setRandomEvents(fetchedRandomEvents); // Set random events
       console.log('Events loaded successfully:', fetchedEvents);
     } catch (error) {
       console.error('Error loading events:', error);
@@ -52,24 +54,8 @@ const HomePage = () => {
     }
   };
 
-  const loadRandomEvents = async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const fetchedRandomEvents = await fetchRandomEvents();
-      setRandomEvents(fetchedRandomEvents);
-      console.log('Random events loaded successfully:', fetchedRandomEvents);
-    } catch (error) {
-      console.error('Error loading random events:', error);
-      setLoadError('Failed to load random events');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     loadEvents();
-    loadRandomEvents();
   }, [position]);
 
   return (
@@ -110,26 +96,28 @@ const HomePage = () => {
             <p>Showing events based on {selectedEvent ? `selected event: ${selectedEvent.title}` : 'current location'}</p>
           </div>
           <div className="event-details">
-            {selectedEvent ? (
-              <>
-                <EventDetails event={selectedEvent} />
-                <h2>Random Events</h2>
-                {randomEvents.length > 0 ? (
-                  randomEvents.map(event => (
-                    <div key={event._id} className="event-item">
-                      <h3>{event.title}</h3>
-                      <p>{new Date(event.date).toLocaleString()}</p>
-                      <p>{event.location.streetAddress}, {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p>No random events found</p>
-                )}
-              </>
+            {selectedEvent ? <EventDetails event={selectedEvent} /> : <p>Select an event to see the details</p>}
+            <div className="random-events">
+            <h2>Random Events</h2>
+            {randomEvents.length > 0 ? (
+              randomEvents.map(event => (
+                <div
+                  key={event._id}
+                  className="event-item"
+                  onClick={() => handleEventClick(event)} // Ensure clicking random events updates the event details
+                >
+                  <h3>{event.title}</h3>
+                  <p>{new Date(event.date).toLocaleString()}</p>
+                  <p>{event.location.streetAddress}, {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
+                  <button>RSVP</button>
+                </div>
+              ))
             ) : (
-              <p>Select an event to see the details</p>
+              <p>No random events found</p>
             )}
           </div>
+          </div>
+
         </div>
       )}
     </div>
