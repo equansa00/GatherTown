@@ -1,39 +1,6 @@
 const mongoose = require('mongoose');
 const { isAfter, startOfDay } = require('date-fns');
 
-const locationSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ['Point'],
-    required: true
-  },
-  coordinates: {
-    type: [Number],
-    required: true,
-    validate: {
-      validator: ([lng, lat]) => lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90,
-      message: 'Coordinates must be valid longitude and latitude values',
-    },
-  },
-  streetAddress: String,
-  city: {
-    type: String,
-    required: [true, 'City is required']
-  },
-  state: {
-    type: String,
-    required: [true, 'State is required']
-  },
-  zipCode: {
-    type: String,
-    required: [true, 'Zip Code is required']
-  },
-  country: {
-    type: String,
-    required: [true, 'Country is required']
-  },
-}, { _id: false });
-
 const eventSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -54,37 +21,80 @@ const eventSchema = new mongoose.Schema({
     },
     index: true,
   },
-  location: locationSchema,
+  time: {
+    type: String,
+    required: [true, 'Time is required'],
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: [true, 'Location type is required'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      required: [true, 'Coordinates are required'],
+      validate: {
+        validator: ([lng, lat]) => lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90,
+        message: 'Coordinates must be valid longitude and latitude values',
+      },
+      index: '2dsphere'
+    },
+    street: {
+      type: String,
+      required: [true, 'Street address is required'],
+    },
+    city: {
+      type: String,
+      required: [true, 'City is required'],
+    },
+    state: {
+      type: String,
+      required: [true, 'State is required'],
+    },
+    country: {
+      type: String,
+      required: [true, 'Country is required'],
+    },
+    zipCode: {
+      type: String,
+    }
+  },
   category: {
     type: String,
     required: [true, 'Category is required'],
     enum: ['Music', 'Sports', 'Art', 'Food', 'Tech', 'Recreation', 'Other'],
     index: true,
   },
+  demographics: {
+    ageGroup: String,
+    interests: [String],
+  },
+  tags: [String],
   creator: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-  }, // Not required
-  isFeatured: {
-    type: Boolean,
-    default: false,
+    required: [true, 'Creator is required'],
   },
-  time: {
-    type: String,
-    required: [true, 'Time is required'],
-  },
-  images: [{
-    type: String,
-    required: true,
-  }],
   attendees: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   }],
+  images: [{
+    type: String,
+    required: true,
+  }],
+  isFeatured: {
+    type: Boolean,
+    default: false,
+  },
 });
 
+// Add geospatial index for location
 eventSchema.index({ location: '2dsphere' });
 
+// Validate event date before saving
 eventSchema.pre('save', function (next) {
   if (this.isNew || this.isModified('date')) {
     if (!isAfter(this.date, startOfDay(new Date()))) {
@@ -93,11 +103,6 @@ eventSchema.pre('save', function (next) {
   }
   next();
 });
-
-eventSchema.statics.findUpcomingEvents = async function () {
-  const today = startOfDay(new Date());
-  return this.find({ date: { $gte: today } }).sort({ date: 1 });
-};
 
 const Event = mongoose.model('Event', eventSchema);
 

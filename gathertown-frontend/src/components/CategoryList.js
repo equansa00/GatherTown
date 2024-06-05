@@ -1,35 +1,10 @@
 // src/components/CategoryList.js
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import FilterList from './FilterList';
+import { fetchCategories } from '../api/eventsService';
 
 const CategoryList = ({ onSelectCategory }) => {
-  const [categories, setCategories] = useState([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get('/api/categories');
-        setCategories(response.data);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  return (
-    <div>
-      <h3>Categories</h3>
-      <ul>
-        {categories.map((category, index) => (
-          <li key={index} onClick={() => onSelectCategory(category)}>
-            {category}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+  return <FilterList label="Categories" fetchFunction={fetchCategories} onSelect={onSelectCategory} optionValueField="id" optionLabelField="name" />;
 };
 
 export default CategoryList;

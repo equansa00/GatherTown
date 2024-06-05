@@ -1,34 +1,17 @@
-import React, { useState, useEffect } from 'react';
+// src/components/StateList.js
+import React from 'react';
+import FilterList from './FilterList';
 import { fetchStates } from '../api/eventsService';
 
 const StateList = ({ country, onSelectState }) => {
-  const [states, setStates] = useState([]);
-
-  useEffect(() => {
+  const fetchStatesForCountry = async () => {
     if (country) {
-      const fetchStateData = async () => {
-        try {
-          const stateData = await fetchStates(country);
-          setStates(stateData);
-        } catch (error) {
-          console.error('Error fetching states:', error);
-        }
-      };
-
-      fetchStateData();
+      return await fetchStates(country);
     }
-  }, [country]);
+    return [];
+  };
 
-  return (
-    <select onChange={(e) => onSelectState(e.target.value)}>
-      <option value="">Select State</option>
-      {states.map((state) => (
-        <option key={state} value={state}>
-          {state}
-        </option>
-      ))}
-    </select>
-  );
+  return <FilterList label="States" fetchFunction={fetchStatesForCountry} onSelect={onSelectState} optionValueField="code" optionLabelField="name" />;
 };
 
 export default StateList;

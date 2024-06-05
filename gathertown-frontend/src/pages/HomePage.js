@@ -1,4 +1,3 @@
-// src/pages/HomePage.js
 import React, { useState, useCallback, useEffect } from 'react';
 import MapComponent from '../components/MapComponent';
 import HomeEventsList from '../features/events/HomeEventsList';
@@ -6,28 +5,33 @@ import EventDetails from '../features/events/EventDetails';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorDisplay from '../components/ErrorDisplay';
-import { fetchEvents, fetchRandomEvents } from '../api/eventsService';
+import { fetchEvents } from '../api/eventsService';
 import './HomePage.css';
 
-const defaultPosition = { lat: 40.730610, lng: -73.935242 };
+const defaultPosition = { lat: 40.7128, lng: -74.0060 }; // New York City Coordinates
 
-const HomePage = () => {
-  const { user} = useAuth();
+const HomePage = ({
+  isLoading,
+  setIsLoading,
+  loadError,
+  setLoadError,
+  userLocation,
+  externalEventClick,
+  externalEventHover
+}) => {
+  const { user } = useAuth();
   const [events, setEvents] = useState([]);
-  const [randomEvents, setRandomEvents] = useState([]);
-  const [position, setPosition] = useState(defaultPosition);
+  const [position, setPosition] = useState(userLocation || defaultPosition);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
-  const [useStaticMap, setUseStaticMap] = useState(false); // Toggle for static map
+  const [useStaticMap, setUseStaticMap] = useState(false);
 
-  const handleEventClick = useCallback((event) => {
+  const handleInternalEventClick = useCallback((event) => {
     setSelectedEvent(event);
-  }, []);
-
-  const handleEventHover = useCallback((event) => {
-    console.log('Event hovered:', event);
-  }, []);
+    setPosition({ lat: event.location.coordinates[1], lng: event.location.coordinates[0] });
+    if (externalEventClick) {
+      externalEventClick(event);
+    }
+  }, [externalEventClick]);
 
   const handleMarkerClick = useCallback((event) => {
     setSelectedEvent(event);
@@ -37,15 +41,12 @@ const HomePage = () => {
     console.log('Map loaded:', mapInstance);
   }, []);
 
-  const loadEvents = async (page = 0) => {
+  const loadEvents = async () => {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const fetchedEvents = await fetchEvents({ lat: position.lat, lng: position.lng, page });
-      const fetchedRandomEvents = await fetchRandomEvents(); // Fetch random events
+      const fetchedEvents = await fetchEvents({ lat: position.lat, lng: position.lng });
       setEvents(fetchedEvents);
-      setRandomEvents(fetchedRandomEvents); // Set random events
-      console.log('Events loaded successfully:', fetchedEvents);
     } catch (error) {
       console.error('Error loading events:', error);
       setLoadError('Failed to load events');
@@ -56,13 +57,14 @@ const HomePage = () => {
 
   useEffect(() => {
     loadEvents();
-  }, [position]);
+  }, [position]); // Fetch events whenever the position changes
 
   return (
     <div className="outer-container">
       <div className="header">
         {user && <p>Welcome, {user.username}!</p>}
       </div>
+
       {isLoading ? (
         <LoadingSpinner />
       ) : loadError ? (
@@ -76,7 +78,7 @@ const HomePage = () => {
               selectedEvent={selectedEvent}
               onMarkerClick={handleMarkerClick}
               onLoad={handleMapLoad}
-              onEventHover={handleEventHover}
+              onEventHover={externalEventHover}
               useStaticMap={useStaticMap}
             />
             <button onClick={() => setUseStaticMap(!useStaticMap)}>
@@ -85,39 +87,18 @@ const HomePage = () => {
           </div>
           <div className="events-section">
             <HomeEventsList
-              onEventClick={handleEventClick}
-              onEventHover={handleEventHover}
-              userLocation={position}
-              setPosition={setPosition}
-              setEvents={setEvents}
+              onEventClick={handleInternalEventClick}
+              onEventHover={externalEventHover}
               setIsLoading={setIsLoading}
+              loadError={loadError}
               setLoadError={setLoadError}
+              userLocation={position} 
             />
             <p>Showing events based on {selectedEvent ? `selected event: ${selectedEvent.title}` : 'current location'}</p>
           </div>
           <div className="event-details">
-            {selectedEvent ? <EventDetails event={selectedEvent} /> : <p>Select an event to see the details</p>}
-            <div className="random-events">
-            <h2>Random Events</h2>
-            {randomEvents.length > 0 ? (
-              randomEvents.map(event => (
-                <div
-                  key={event._id}
-                  className="event-item"
-                  onClick={() => handleEventClick(event)} // Ensure clicking random events updates the event details
-                >
-                  <h3>{event.title}</h3>
-                  <p>{new Date(event.date).toLocaleString()}</p>
-                  <p>{event.location.streetAddress}, {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
-                  <button>RSVP</button>
-                </div>
-              ))
-            ) : (
-              <p>No random events found</p>
-            )}
+            {selectedEvent ? <EventDetails eventId={selectedEvent._id} /> : <p>Select an event to see the details</p>}
           </div>
-          </div>
-
         </div>
       )}
     </div>

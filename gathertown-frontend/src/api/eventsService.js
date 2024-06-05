@@ -1,3 +1,4 @@
+// eventsService.js
 import axios from 'axios';
 import { getAuthHeader } from '../utils/auth';
 
@@ -21,11 +22,17 @@ axios.interceptors.response.use(response => {
 
 const API_URL = 'http://localhost:5000/api/events';
 
-export const fetchEventsNearby = async ({ lat, lng, maxDistance = 160934, limit = 5 }) => {
+export const fetchEventsNearby = async (lat, lng, maxDistance = 5000, limit = 10) => {
   try {
     const response = await axios.get(`${API_URL}/nearby`, {
-      params: { lat, lng, maxDistance, limit }
+      params: {
+        latitude: lat,
+        longitude: lng,
+        maxDistance,
+        limit,
+      },
     });
+    console.log('Response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching nearby events:', error);
@@ -165,19 +172,28 @@ export const deleteEvent = async (id) => {
   }
 };
 
-export const rsvpToEvent = async (eventId) => {
-  console.log(`[rsvpToEvent] RSVPing to event ID: ${eventId}`);
+export async function rsvpToEvent(eventId) {
   try {
-    const response = await axios.post(`${API_URL}/${eventId}/rsvp`, {}, { headers: getAuthHeader() });
-    console.log(`[rsvpToEvent] RSVP successful. Response data: ${JSON.stringify(response.data)}`);
-    return response.data;
+    const response = await axios.post(`${API_URL}/${eventId}/rsvp`, {}, {
+      headers: getAuthHeader() 
+    });
+    if (response.status === 200) {
+      // RSVP successful
+      return response.data;
+    } else {
+      throw new Error(`Request failed with status code ${response.status}`);
+    }
   } catch (error) {
-    console.error(`[rsvpToEvent] Error RSVPing to event: ${error.message}`);
-    throw error;
-  } finally {
-    console.log('[rsvpToEvent] Finished RSVP process');
+    if (error.response && error.response.status === 404) {
+      console.error('[rsvpToEvent] Error RSVPing to event: Event not found or invalid endpoint.');
+      // Optionally, display a more user-friendly message in your frontend:
+      throw new Error("Couldn't RSVP. The event was not found or there's a server issue.");
+    } else {
+      console.error('[rsvpToEvent] Unexpected error RSVPing to event:', error.message);
+      throw error; // Re-throw for handling in the component
+    }
   }
-};
+}
 
 const handleAxiosError = (error) => {
   if (error.response) {

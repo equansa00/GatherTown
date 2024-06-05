@@ -1,4 +1,4 @@
-General Styling
+/* General Styling */
 body, html {
     height: 100%;
     margin: 0;
@@ -28,12 +28,13 @@ body, html {
     display: flex;
     justify-content: space-around; /* Evenly space the map and event sections */
     padding: 20px;
+    height: calc(100vh - 80px); /* Adjust based on your header height */
 }
 
 /* Map Container */
 .map-container {
     width: 60%;  /* Adjust map width as needed */
-    height: 600px; /* Set a fixed height or make responsive */
+    height: 100%; /* Make the map take the full height */
     border-radius: 10px; /* Rounded corners */
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* More pronounced shadow */
@@ -42,14 +43,22 @@ body, html {
 /* Events Section */
 .events-section {
     width: 35%; /* Adjust events section width as needed */
-    background-color: #fff; /* White background */
+    display: flex;
+    flex-direction: column;
+}
+
+.nearby-events, .event-details, .random-events {
+    background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    overflow-y: auto; /* Add scrollbar if content overflows */
+    margin-bottom: 20px; /* Add space between sections */
+    overflow-y: auto;
+    max-height: 45%; /* Adjust based on your preference */
 }
-.events-section h2 {
-    margin-top: 0; /* Remove default top margin */
+
+.nearby-events h2, .event-details h2, .random-events h2 {
+    margin-top: 0;
 }
 
 .event-item {
@@ -57,26 +66,8 @@ body, html {
     padding: 15px 0;
     transition: transform 0.2s, box-shadow 0.2s; /* Add smooth transitions */
 }
+
 .event-item:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
-
-/* Event Details and Random Events */
-.event-details, .random-events { 
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    margin-bottom: 20px; /* Add space between sections */
-    overflow-y: auto;
-}
-.event-details h2, .random-events h2 {
-    margin-top: 0;
-}
-.random-events { /* This is where you relocate the random events section */
-    margin-top: 20px; /* Add some spacing from the event details */
-}
-
-
-

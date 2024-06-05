@@ -1,10 +1,11 @@
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const { validationResult } = require('express-validator');
-const axios = require('axios');
 const logger = require('../config/logger');
 const cloudinary = require('../config/cloudinary');
 const { getDistanceFromLatLonInMiles } = require('../utils/geolocationUtils');
-
+const { geocodeAddress } = require('../utils/geocode');
+const axios = require('axios');
 
 // Helper functions
 const handleNotFound = (res, message) => res.status(404).json({ msg: message });
@@ -25,44 +26,23 @@ const uploadImage = async (imagePath) => {
   }
 };
 
-// Build the filter object based on query parameters
 const buildFilter = (query) => {
   const filter = {};
-
-  if (query.title) {
-    filter.title = new RegExp(query.title, 'i'); // Case-insensitive search
-  }
-  if (query.category) {
-    filter.category = new RegExp(query.category, 'i'); // Case-insensitive search
-  }
-  if (query.country) {
-    filter['location.country'] = query.country;
-  }
-  if (query.state) {
-    filter['location.state'] = query.state;
-  }
-  if (query.city) {
-    filter['location.city'] = query.city;
-  }
-  if (query.zipCode) {
-    filter['location.zipCode'] = query.zipCode;
-  }
+  if (query.title) filter.title = new RegExp(query.title, 'i');
+  if (query.category) filter.category = new RegExp(query.category, 'i');
+  if (query.country) filter['location.country'] = query.country;
+  if (query.state) filter['location.state'] = query.state;
+  if (query.city) filter['location.city'] = query.city;
+  if (query.zipCode) filter['location.zipCode'] = query.zipCode;
   if (query.startDate || query.endDate) {
     filter.date = {};
-    if (query.startDate) {
-      filter.date.$gte = new Date(query.startDate);
-    }
-    if (query.endDate) {
-      filter.date.$lte = new Date(query.endDate);
-    }
+    if (query.startDate) filter.date.$gte = new Date(query.startDate);
+    if (query.endDate) filter.date.$lte = new Date(query.endDate);
   }
-
   return filter;
 };
 
-// Get events with pagination, filtering, keyword search, and date range
 exports.getEvents = async (req, res) => {
-  console.log('Received query params:', req.query); // Log received query params
   const { page = 0, limit = 10 } = req.query;
   const pageNum = parseInt(page, 10);
   const limitNum = parseInt(limit, 10);
@@ -72,8 +52,6 @@ exports.getEvents = async (req, res) => {
   }
 
   const filter = buildFilter(req.query);
-
-  console.log('Constructed filter:', filter); // Log constructed filter
 
   try {
     const events = await Event.find(filter).skip(pageNum * limitNum).limit(limitNum);
@@ -89,7 +67,6 @@ exports.getEvents = async (req, res) => {
     res.status(500).json({ error: 'Server error', details: error.message });
   }
 };
-
 
 // Get all events with optional filtering
 exports.getAllEvents = async (req, res) => {
@@ -122,41 +99,35 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// Create a new event
+// Create Event
 exports.createEvent = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { title, description, date, location, category, time, creator } = req.body;
-  let imageUrl = '';
+  const { title, description, date, time, category, location, images, demographics, tags } = req.body;
+  const creator = req.user.id;
 
   try {
-    if (req.file) {
-      imageUrl = await uploadImage(req.file.path);
-    }
-
     const event = new Event({
       title,
       description,
       date,
-      location: {
-        type: "Point",
-        coordinates: location.coordinates,
-        country: location.country, 
-        state: location.state, 
-        city: location.city || "Unknown", 
-      },
-      category,
       time,
-      creator,
-      images: [imageUrl]
+      category,
+      location,
+      images,
+      demographics,
+      tags,
+      creator
     });
+
     await event.save();
     res.status(201).json({ message: 'Event created successfully', event });
   } catch (error) {
-    handleServerError(res, error);
+    console.error('Error creating event:', error);
+    res.status(500).json({ message: 'Error creating event', error });
   }
 };
 
@@ -197,9 +168,18 @@ exports.rsvpToEvent = async (req, res) => {
     const userId = req.user.id;
     const eventId = req.params.id;
 
+    console.log(`RSVP request for event ID: ${eventId} by user ID: ${userId}`);
+
     const event = await Event.findById(eventId);
     if (!event) {
+      console.log('Event not found');
       return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Check if the event has a creator
+    if (!event.creator) {
+      console.log('Event creator is missing');
+      return res.status(400).json({ message: 'Event creator is missing' });
     }
 
     if (!event.attendees) {
@@ -209,6 +189,7 @@ exports.rsvpToEvent = async (req, res) => {
     if (!event.attendees.includes(userId)) {
       event.attendees.push(userId);
       await event.save();
+      console.log('RSVP successful');
       res.json({ message: 'RSVP successful', event });
     } else {
       res.status(400).json({ message: 'User already RSVPed to this event' });
@@ -232,24 +213,23 @@ exports.getEventById = async (req, res) => {
   }
 };
 
-// Get nearby events
 exports.getNearbyEvents = async (req, res) => {
-  const { lat, lng, maxDistance = 160934, limit = 5 } = req.query; 
+  const { latitude, longitude, maxDistance = 160934, limit = 5 } = req.query; 
 
   try {
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(lng);
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
     const distance = parseInt(maxDistance, 10);
     const limitNum = parseInt(limit, 10);
 
-    if (isNaN(latitude) || isNaN(longitude) || isNaN(distance) || isNaN(limitNum)) {
+    if (isNaN(lat) || isNaN(lng) || isNaN(distance) || isNaN(limitNum)) {
       return res.status(400).json({ error: 'Invalid latitude, longitude, distance, or limit parameters' });
     }
 
     const events = await Event.find({
       location: {
         $near: {
-          $geometry: { type: "Point", coordinates: [longitude, latitude] },
+          $geometry: { type: "Point", coordinates: [lng, lat] },
           $maxDistance: distance
         }
       }
@@ -259,7 +239,7 @@ exports.getNearbyEvents = async (req, res) => {
     .sort({ date: 1 }); // Sort by date in ascending order
 
     const eventsWithDistance = events.map(event => {
-      const eventDistance = getDistanceFromLatLonInMiles(latitude, longitude, event.location.coordinates[1], event.location.coordinates[0]);
+      const eventDistance = getDistanceFromLatLonInMiles(lat, lng, event.location.coordinates[1], event.location.coordinates[0]);
       return { ...event, distance: eventDistance };
     });
 
@@ -381,4 +361,3 @@ exports.searchEvents = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-

@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { fetchEventsNearby, fetchRandomEvents, rsvpToEvent } from '../../api/eventsService';
+import RandomEventsList from './RandomEventsList';
+import EventsNearby from './EventsNearby';
+import { fetchEventsNearby, fetchRandomEvents } from '../../api/eventsService';
 import { getDistanceFromLatLonInMiles } from '../../utils/geolocationUtils';
+import { initializeRsvpStatus, handleRsvp } from '../../utils/rsvpUtils';
 
 const HomeEventsList = ({
   onEventClick,
@@ -27,12 +30,12 @@ const HomeEventsList = ({
 
     try {
       // Fetch Nearby Events
-      const nearbyEvents = await fetchEventsNearby({
-        lat: userLocation.lat,
-        lng: userLocation.lng,
-        maxDistance: 8046.72, // 5 miles in meters
-        limit: 50 // Assuming you want to load all nearby events
-      });
+      const nearbyEvents = await fetchEventsNearby(
+        userLocation.lat,
+        userLocation.lng,
+        8046.72, // 5 miles in meters
+        50 // Assuming you want to load all nearby events
+      );
       logMessage(`Fetched ${nearbyEvents.length} nearby events from API`);
 
       const eventsWithDistance = nearbyEvents.map(event => ({
@@ -41,7 +44,7 @@ const HomeEventsList = ({
       }));
 
       setNearbyEventList(eventsWithDistance);
-      setRsvpStatus(eventsWithDistance.map(event => ({ id: event._id, isRSVPed: event.isRSVPed })));
+      setRsvpStatus(initializeRsvpStatus(eventsWithDistance));
 
       // Fetch Random Events
       const randomEvents = await fetchRandomEvents();
@@ -55,7 +58,7 @@ const HomeEventsList = ({
       setRandomEventList(randomEventsWithDistance);
       setRsvpStatus(prevRsvpStatus => [
         ...prevRsvpStatus,
-        ...randomEventsWithDistance.map(event => ({ id: event._id, isRSVPed: event.isRSVPed }))
+        ...initializeRsvpStatus(randomEventsWithDistance)
       ]);
     } catch (error) {
       logMessage(`Error loading events: ${error.message}`);
@@ -75,66 +78,40 @@ const HomeEventsList = ({
     onEventClick(event);
   };
 
-  const handleRSVP = async (eventId, isRSVPed, e) => {
+  const handleRSVP = async (eventId, e) => {
     e.stopPropagation();
-    if (isRSVPed) {
+
+    const currentRsvpStatus = rsvpStatus.find(status => status.eventId === eventId);
+    if (currentRsvpStatus?.isRSVPed) {
       alert('You have already RSVPed to this event.');
       return;
     }
+    
     try {
-      await rsvpToEvent(eventId);
-      alert('RSVP successful!');
-      setRsvpStatus(rsvpStatus.map(status => (status.id === eventId ? { ...status, isRSVPed: true } : status)));
+      await handleRsvp(eventId, rsvpStatus, setRsvpStatus, console.error);
     } catch (error) {
-      alert('Failed to RSVP');
       console.error('RSVP error:', error);
     }
   };
 
   return (
     <div className="events-list-container">
-      <div className="nearby-events">
-        <h2>Nearby Events</h2>
-        {nearbyEventList.length === 0 && !isLoading && <p>No nearby events found</p>}
-        {nearbyEventList.map((event) => (
-          <div
-            key={event._id}
-            className="event-item"
-            onClick={() => handleEventSelect(event)}
-            onMouseEnter={() => onEventHover(event)}
-          >
-            <h3>{event.title}</h3>
-            <p>{event.description}</p>
-            <p>{new Date(event.date).toLocaleString()}</p>
-            <p>{event.location.streetAddress}, {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
-            <p>Distance: {event.distance ? `${event.distance.toFixed(2)} miles` : 'N/A'}</p>
-            <button onClick={(e) => handleRSVP(event._id, event.isRSVPed || rsvpStatus.find(status => status.id === event._id).isRSVPed, e)}>
-              {event.isRSVPed || rsvpStatus.find(status => status.id === event._id).isRSVPed ? '✔️ RSVPed' : 'RSVP'}
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="random-events">
-        <h2>Random Events</h2>
-        {randomEventList.length === 0 && !isLoading && <p>No random events found</p>}
-        {randomEventList.map((event) => (
-          <div
-            key={event._id}
-            className="event-item"
-            onClick={() => handleEventSelect(event)}
-            onMouseEnter={() => onEventHover(event)}
-          >
-            <h3>{event.title}</h3>
-            <p>{event.description}</p>
-            <p>{new Date(event.date).toLocaleString()}</p>
-            <p>{event.location.streetAddress}, {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
-            <p>Distance: {event.distance ? `${event.distance.toFixed(2)} miles` : 'N/A'}</p>
-            <button onClick={(e) => handleRSVP(event._id, event.isRSVPed || rsvpStatus.find(status => status.id === event._id).isRSVPed, e)}>
-              {event.isRSVPed || rsvpStatus.find(status => status.id === event._id).isRSVPed ? '✔️ RSVPed' : 'RSVP'}
-            </button>
-          </div>
-        ))}
-      </div>
+      <EventsNearby
+        events={nearbyEventList}
+        onEventClick={handleEventSelect}
+        onEventHover={onEventHover}
+        rsvpStatus={rsvpStatus}
+        setRsvpStatus={setRsvpStatus}
+        handleRSVP={handleRSVP}
+      />
+      <RandomEventsList
+        events={randomEventList}
+        onEventClick={handleEventSelect}
+        onEventHover={onEventHover}
+        rsvpStatus={rsvpStatus}
+        setRsvpStatus={setRsvpStatus}
+        handleRSVP={handleRSVP}
+      />
       {isLoading && <p>Loading...</p>}
       {loadError && <p>{loadError}</p>}
     </div>
@@ -142,22 +119,4 @@ const HomeEventsList = ({
 };
 
 export default HomeEventsList;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

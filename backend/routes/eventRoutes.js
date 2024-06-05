@@ -1,4 +1,3 @@
-// src/routes/eventRoutes.js
 const express = require('express');
 const { body } = require('express-validator');
 const {
@@ -49,9 +48,11 @@ const eventValidation = [
   body('title').not().isEmpty().withMessage('Title cannot be empty'),
   body('description').not().isEmpty().withMessage('Description cannot be empty'),
   body('date').isISO8601().withMessage('Date must be a valid ISO 8601 date'),
-  body('location.type').equals('Point').withMessage('Location type must be "Point"'),
-  body('location.coordinates').isArray().withMessage('Location coordinates must be an array'),
-  body('category').not().isEmpty().withMessage('Category cannot be empty'),
+  body('location.street').not().isEmpty().withMessage('Street address is required'),
+  body('location.city').not().isEmpty().withMessage('City is required'),
+  body('location.state').not().isEmpty().withMessage('State is required'),
+  body('location.country').not().isEmpty().withMessage('Country is required'),
+  body('time').not().isEmpty().withMessage('Time is required'),
 ];
 
 // Public Event Routes
@@ -60,6 +61,7 @@ router.get('/zip', getEventsByZip);
 router.get('/featured', getFeaturedEvents);
 router.get('/random', getRandomEvents);
 router.get('/all', getAllEvents);
+router.get('/search', searchEvents); 
 
 // Specific routes before the parameterized route
 router.get('/events/nearby', getNearbyEvents);
@@ -76,6 +78,7 @@ router.get('/', getEvents);
 router.get('/:id', checkEventExists, getEventById);
 
 // Protected Event Routes (Require Authentication)
+// Create Event Route
 router.post(
   '/',
   authMiddleware,
@@ -102,7 +105,7 @@ router.delete(
 );
 
 router.post(
-  '/:id/rsvp',
+  '/:id/rsvp',  // Corrected route
   authMiddleware,
   checkEventExists,
   rsvpToEvent

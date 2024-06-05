@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { getEventDetails } from '../../api/eventsService';
 import { fetchAddress } from '../../utils/geolocationUtils';
 
-function EventDetails({ event }) {
+const EventDetails = () => {
+  const { eventId } = useParams();
   const [eventDetails, setEventDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [address, setAddress] = useState('Unknown Address');
 
   useEffect(() => {
-    if (!event) {
+    if (!eventId) {
       setLoading(false);
       return;
     }
 
     const fetchEvent = async () => {
       try {
-        console.log(`Fetching details for event ID: ${event._id}`);
-        const details = await getEventDetails(event._id);
+        console.log(`Fetching details for event ID: ${eventId}`);
+        const details = await getEventDetails(eventId);
         setEventDetails(details);
         setLoading(false);
         if (details.location.coordinates) {
@@ -33,7 +35,7 @@ function EventDetails({ event }) {
     };
 
     fetchEvent();
-  }, [event]);
+  }, [eventId]);
 
   if (loading) {
     return <p>Loading event details...</p>;
@@ -49,13 +51,20 @@ function EventDetails({ event }) {
 
   return (
     <div>
-      {eventDetails.image && <img src={eventDetails.image} alt={eventDetails.title} style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />}
+      {eventDetails.images && eventDetails.images.length > 0 && (
+        <img
+          src={eventDetails.images[0]}
+          alt={eventDetails.title}
+          style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+        />
+      )}
       <h2>{eventDetails.title}</h2>
       <p>{eventDetails.description}</p>
       <p>Date: {new Date(eventDetails.date).toLocaleDateString()} at {eventDetails.time}</p>
       <p>Location: {address}</p>
     </div>
   );
-}
+};
 
 export default EventDetails;
+

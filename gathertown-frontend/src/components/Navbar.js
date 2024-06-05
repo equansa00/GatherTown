@@ -14,7 +14,7 @@ const Navbar = () => {
       <ul>
         <li><Link to="/">Home</Link></li>
         <li><Link to="/all-events">All Events</Link></li>
-        <li><Link to="/submit">Submit Event</Link></li>
+        <li><Link to="/create-event">Create Event</Link></li>
         {!user ? (
           <>
             <li><Link to="/login">Login</Link></li>

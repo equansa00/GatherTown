@@ -1,66 +1,72 @@
-// src/features/events/AllEventsList.js
-import React, { useState } from 'react';
-import { rsvpToEvent } from '../../api/eventsService';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
 import './AllEventsList.css';
+import { initializeRsvpStatus, handleRsvp } from '../../utils/rsvpUtils';
 
-const AllEventsList = ({ events, onEventClick, onEventHover }) => {
-  console.log('[AllEventsList] Rendering component');
+const AllEventsList = () => {
+  const [events, setEvents] = useState([]);
   const [expandedEventId, setExpandedEventId] = useState(null);
-  const [rsvpStatus, setRsvpStatus] = useState(events.map(event => ({ id: event._id, isRSVPed: event.isRSVPed })));
+  const [rsvpStatus, setRsvpStatus] = useState([]);
+  const { eventId } = useParams();
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/events');
+        const eventsData = response.data.events;
+
+        // Initialize RSVP statuses for all events
+        setRsvpStatus(initializeRsvpStatus(eventsData));
+        setEvents(eventsData);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    if (eventId) {
+      const element = document.getElementById(eventId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        setExpandedEventId(eventId);
+      }
+    }
+  }, [eventId]);
 
   const handleEventSelect = (event) => {
-    console.log('[handleEventSelect] Event selected:', event);
-    if (onEventClick) onEventClick(event);
-    setExpandedEventId(event._id === expandedEventId ? null : event._id); // Toggle expansion
+    setExpandedEventId(event._id === expandedEventId ? null : event._id);
   };
 
-  const handleRSVP = async (eventId, isRSVPed, e) => {
-    console.log(`[handleRSVP] RSVPing to event ID: ${eventId}`);
+  const handleRSVP = async (eventId, e) => {
     e.stopPropagation();
-    if (isRSVPed) {
-      alert('You have already RSVPed to this event.');
-      return;
-    }
-    try {
-      await rsvpToEvent(eventId);
-      alert('RSVP successful!');
-      console.log(`[handleRSVP] RSVP successful for event ID: ${eventId}`);
-      setRsvpStatus(rsvpStatus.map(status => (status.id === eventId ? { ...status, isRSVPed: true } : status)));
-    } catch (error) {
-      alert('Failed to RSVP');
-      console.error('[handleRSVP] RSVP error:', error);
-    }
+    await handleRsvp(eventId, rsvpStatus, setRsvpStatus, (error) => {
+      console.error('RSVP error:', error);
+    });
   };
-
-  if (!Array.isArray(events) || events.length === 0) {
-    console.log('[AllEventsList] No events available');
-    return <p>No events available.</p>;
-  }
-
-  console.log(`[AllEventsList] Rendering ${events.length} events`);
 
   return (
     <div className="event-list">
-      {events.map((event, index) => (
+      {events.map((event) => (
         <div
-          key={event._id ? `${event._id}-${index}` : index}
+          key={event._id}
+          id={event._id}
           className={`event-item ${expandedEventId === event._id ? 'expanded' : ''}`}
           onClick={() => handleEventSelect(event)}
-          onMouseEnter={() => onEventHover(event)}
         >
           <h3>{event.title}</h3>
           <p>{new Date(event.date).toLocaleString()}</p>
-          <p>{event.location.streetAddress}, {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
           {expandedEventId === event._id && (
             <div className="event-description">
-              <p><strong>Description:</strong> {event.description}</p>
-              <p><strong>Location:</strong> {event.location.city}, {event.location.state}, {event.location.country}, {event.location.zipCode}</p>
-              <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-              <p><strong>Time:</strong> {event.time}</p>
+              <p>{event.description}</p>
+              {/* Add other detailed event information here */}
             </div>
           )}
-          <button onClick={(e) => handleRSVP(event._id, event.isRSVPed || rsvpStatus.find(status => status.id === event._id).isRSVPed, e)}>
-            {event.isRSVPed || rsvpStatus.find(status => status.id === event._id).isRSVPed ? '✔️ RSVPed' : 'RSVP'}
+          <button onClick={(e) => handleRSVP(event._id, e)}>
+            {rsvpStatus.find(status => status.id === event._id)?.isRSVPed ? '✔️ RSVPed' : 'RSVP'}
           </button>
         </div>
       ))}
@@ -69,3 +75,4 @@ const AllEventsList = ({ events, onEventClick, onEventHover }) => {
 };
 
 export default AllEventsList;
+

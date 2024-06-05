@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 
 // Load and log environment variables
 console.log('Loading and verifying environment variables...');
-const envVars = ['MONGO_URI', 'JWT_SECRET', 'CLIENT_ID', 'CLIENT_SECRET', 'REDIRECT_URI', 'REFRESH_TOKEN', 'GOOGLE_MAPS_API_KEY'];
+const envVars = ['MONGO_URI', 'JWT_SECRET', 'MAPBOX_ACCESS_TOKEN', 'EMAIL_USER', 'EMAIL_PASS', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
 envVars.forEach(env => {
     if (process.env[env]) {
         console.log(`${env} loaded successfully:`, env === 'CLIENT_SECRET' || env === 'REFRESH_TOKEN' ? '[HIDDEN]' : process.env[env]);
@@ -60,7 +60,7 @@ envVars.forEach(env => {
 
 console.log('Database URI:', process.env.MONGO_URI);
 console.log('JWT Secret:', process.env.JWT_SECRET);
-console.log('Google Maps API Key:', process.env.GOOGLE_MAPS_API_KEY);
+console.log('Mapbox Access Token:', process.env.MAPBOX_ACCESS_TOKEN);
 
 // Connect to MongoDB
 connectDB();
@@ -83,4 +83,3 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = app;
-

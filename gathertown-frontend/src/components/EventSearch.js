@@ -1,6 +1,6 @@
 // src/features/events/EventSearch.js
 import React, { useState, useEffect } from 'react';
-import { fetchCountries, fetchStates, fetchCities } from '../../api/eventsService';
+import { fetchCountries, fetchStates, fetchCities } from '../api/eventsService';
 
 const EventSearch = ({ onSearch }) => {
   const [title, setTitle] = useState('');
