@@ -1,3 +1,7 @@
+/* index.css */
+@import url('leaflet/dist/leaflet.css');
+
+
 /* General Styling */
 body, html {
     height: 100%;
@@ -36,6 +40,7 @@ body, html {
     width: 60%;  /* Adjust map width as needed */
     height: 100%; /* Make the map take the full height */
     border-radius: 10px; /* Rounded corners */
+    background: gray;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* More pronounced shadow */
 }

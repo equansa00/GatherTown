@@ -1,4 +1,4 @@
-// utils/geocode.js
+//backend/utils/geocode.js
 const axios = require('axios');
 
 const geocodeAddress = async (address) => {

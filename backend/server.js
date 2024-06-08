@@ -7,7 +7,7 @@ const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const { connectDB } = require('./db');
-const handleErrors = require('./middleware/errorHandlers');
+const { handleErrors } = require('./middleware/errorHandlers');
 const logger = require('./config/logger');
 
 const app = express();
@@ -68,10 +68,26 @@ console.log('Connected to MongoDB.');
 
 // Setup routes
 console.log('Setting up routes...');
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
+
+const routeMiddlewares = [
+    { path: '/api/users', middleware: userRoutes },
+    { path: '/api/auth', middleware: authRoutes },
+    { path: '/api/events', middleware: eventRoutes },
+];
+
+// Check each middleware before using it
+routeMiddlewares.forEach(({ path, middleware }) => {
+    if (typeof middleware === 'function' || Array.isArray(middleware)) {
+        console.log(`Adding middleware for path: ${path}`);
+        app.use(path, middleware);
+    } else {
+        console.error(`Invalid middleware for path: ${path}`);
+    }
+});
+
+// Add the error handler middleware at the end
 app.use(handleErrors);
+
 console.log('Routes set up.');
 
 // Start the server
@@ -83,3 +99,5 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = app;
+
+

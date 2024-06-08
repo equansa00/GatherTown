@@ -1,11 +1,11 @@
 // src/index.js
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import App from './App';
-// import './styles.css'; // Import the main CSS file
-import './App.css'; // Import universal styles
+import 'mapbox-gl/dist/mapbox-gl.css'; // Ensure this is correctly imported
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const container = document.getElementById('root');
+const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <App />

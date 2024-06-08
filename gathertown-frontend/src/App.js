@@ -14,8 +14,7 @@ import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import { AuthProvider } from './context/AuthContext';
 import EventDetails from './features/events/EventDetails';
-import UpdateEvent from './features/events/UpdateEvent';
-import DeleteEventButton from './features/events/DeleteEventButton';
+import './App.css'; // Assuming you have some basic styling here
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,6 +29,11 @@ const App = () => {
 
   const handleEventHover = (event) => {
     console.log('Event hovered:', event);
+  };
+
+  const handleUpdateEvent = (updatedEvent) => {
+    setSelectedEvent(updatedEvent);
+    console.log('Event updated:', updatedEvent);
   };
 
   const userLocation = {
@@ -54,11 +58,14 @@ const App = () => {
                   userLocation={userLocation}
                   handleEventClick={handleEventClick}
                   handleEventHover={handleEventHover}
+                  selectedEvent={selectedEvent}
+                  setSelectedEvent={setSelectedEvent}
                 />
               } 
             />
-            <Route path="/events/:eventId" element={<EventDetails />} />
+            <Route path="/events/:eventId" element={<EventDetails event={selectedEvent} events={[]} onUpdateEvent={handleUpdateEvent} />} />
             <Route path="/all-events/:eventId" element={<AllEventsList />} />
+            <Route path="/map/:eventId" element={<EventDetails />} />
             <Route path="/events" element={<AllEventsPage />} />
             <Route path="/create-event" element={<CreateEvent />} />
             <Route path="/all-events" element={<AllEventsPage />} />
@@ -67,12 +74,6 @@ const App = () => {
             <Route path="/login" element={<Login onLogin={setUser} />} />
             <Route path="/register" element={<Register />} />
           </Routes>
-          {selectedEvent && (
-            <div>
-              <UpdateEvent eventId={selectedEvent._id} />
-              <DeleteEventButton eventId={selectedEvent._id} />
-            </div>
-          )}
           <Footer />
         </ErrorBoundary>
       </AuthProvider>

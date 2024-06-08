@@ -1,7 +1,7 @@
-// eventsService.js
 import axios from 'axios';
 import { getAuthHeader } from '../utils/auth';
 
+// Logging functions
 const logMessage = (message) => {
   console.log(`[eventsService] ${message}`);
 };
@@ -22,35 +22,42 @@ axios.interceptors.response.use(response => {
 
 const API_URL = 'http://localhost:5000/api/events';
 
-export const fetchEventsNearby = async (lat, lng, maxDistance = 5000, limit = 10) => {
+// Fetch Event by ID
+export const fetchEventById = async (eventId) => {
   try {
-    const response = await axios.get(`${API_URL}/nearby`, {
-      params: {
-        latitude: lat,
-        longitude: lng,
-        maxDistance,
-        limit,
-      },
-    });
-    console.log('Response:', response.data);
+    const response = await axios.get(`${API_URL}/${eventId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching nearby events:', error);
+    console.error('Error fetching event by ID:', error);
     throw error;
   }
 };
 
-export const fetchRandomEvents = async (count = 5) => {
+// Fetch Random Nearby Events
+export const fetchRandomNearbyEvents = async (lat, lng, radius = 5000, count = 5) => {
   try {
-    const response = await axios.get(`${API_URL}/random`, { params: { count } });
-    logMessage(`Fetched random events: ${response.data.length}`);
+    const response = await axios.get(`${API_URL}/random-nearby`, {
+      params: { latitude: lat, longitude: lng, radius, count },
+    });
     return response.data;
   } catch (error) {
-    logMessage('Error fetching random events');
-    throw new Error('Error fetching random events');
+    console.error('Error fetching random nearby events:', error);
+    throw error;
   }
 };
 
+// Fetch Random Events
+export const fetchRandomEvents = async (count = 5) => {
+  try {
+    const response = await axios.get(`${API_URL}/random`, { params: { count } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching random events:', error);
+    throw error;
+  }
+};
+
+// Fetch Events with Parameters
 export const fetchEvents = async (params) => {
   try {
     logMessage(`Fetching events with params: ${JSON.stringify(params)}`);
@@ -63,6 +70,7 @@ export const fetchEvents = async (params) => {
   }
 };
 
+// Fetch All Events
 export const fetchAllEvents = async (params) => {
   try {
     const response = await axios.get(API_URL, { params });
@@ -73,36 +81,7 @@ export const fetchAllEvents = async (params) => {
   }
 };
 
-export const fetchCountries = async () => {
-  try {
-    const response = await axios.get('/api/events/countries');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching countries:', error);
-    throw error;
-  }
-};
-
-export const fetchStates = async (country) => {
-  try {
-    const response = await axios.get(`/api/events/states?country=${country}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching states:', error);
-    throw error;
-  }
-};
-
-export const fetchCities = async (country, state) => {
-  try {
-    const response = await axios.get(`/api/events/cities?country=${country}&state=${state}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching cities:', error);
-    throw error;
-  }
-};
-
+// Fetch Events by Zip Code
 export const fetchEventsByZip = async (zipCode, page = 0) => {
   const url = `${API_URL}/by-zip`;
   logMessage(`Fetching events by zip code: ${zipCode}, page: ${page}`);
@@ -121,6 +100,7 @@ export const fetchEventsByZip = async (zipCode, page = 0) => {
   }
 };
 
+// Add Event
 export const addEvent = async (eventData) => {
   logMessage("Adding event:", eventData);
   try {
@@ -134,6 +114,7 @@ export const addEvent = async (eventData) => {
   }
 };
 
+// Get Event Details
 export const getEventDetails = async (id) => {
   logMessage(`Fetching event details for ID: ${id}`);
   try {
@@ -146,6 +127,7 @@ export const getEventDetails = async (id) => {
   }
 };
 
+// Update Event
 export const updateEvent = async (id, eventData) => {
   logMessage(`Updating event ID: ${id}`, eventData);
   try {
@@ -159,6 +141,7 @@ export const updateEvent = async (id, eventData) => {
   }
 };
 
+// Delete Event
 export const deleteEvent = async (id) => {
   logMessage(`Deleting event ID: ${id}`);
   try {
@@ -172,6 +155,7 @@ export const deleteEvent = async (id) => {
   }
 };
 
+// RSVP to Event
 export async function rsvpToEvent(eventId) {
   try {
     const response = await axios.post(`${API_URL}/${eventId}/rsvp`, {}, {
@@ -195,6 +179,51 @@ export async function rsvpToEvent(eventId) {
   }
 }
 
+// Fetch Categories
+export const fetchCategories = async () => {
+  try {
+    const response = await axios.get('/api/events/categories');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+// Fetch Countries
+export const fetchCountries = async () => {
+  try {
+    const response = await axios.get('/api/events/countries');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    throw error;
+  }
+};
+
+// Fetch States
+export const fetchStates = async (country) => {
+  try {
+    const response = await axios.get(`/api/events/states?country=${country}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching states:', error);
+    throw error;
+  }
+};
+
+// Fetch Cities
+export const fetchCities = async (country, state) => {
+  try {
+    const response = await axios.get(`/api/events/cities?country=${country}&state=${state}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching cities:', error);
+    throw error;
+  }
+};
+
+// Handle Axios Errors
 const handleAxiosError = (error) => {
   if (error.response) {
     logMessage('Error response:', {
@@ -219,4 +248,8 @@ export default {
   updateEvent,
   deleteEvent,
   rsvpToEvent,
+  fetchCategories,
+  fetchCountries,
+  fetchStates,
+  fetchCities
 };

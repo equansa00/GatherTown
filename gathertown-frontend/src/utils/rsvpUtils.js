@@ -1,5 +1,3 @@
-// src/utils/rsvpUtils.js
-
 import { rsvpToEvent } from '../api/eventsService';
 
 export const initializeRsvpStatus = (events) => {
@@ -9,6 +7,11 @@ export const initializeRsvpStatus = (events) => {
 export const handleRsvp = async (eventId, rsvpStatus, setRsvpStatus, onError) => {
   try {
     const eventStatus = rsvpStatus.find(status => status.id === eventId);
+    if (!eventStatus) {
+      alert('Event not found in RSVP status.');
+      return;
+    }
+
     if (eventStatus.isRSVPed) {
       alert('You have already RSVPed to this event.');
       return;
@@ -21,7 +24,7 @@ export const handleRsvp = async (eventId, rsvpStatus, setRsvpStatus, onError) =>
     ));
   } catch (error) {
     alert('Failed to RSVP');
-    console.error('RSVP error:', error);
     if (onError) onError(error);
   }
 };
+

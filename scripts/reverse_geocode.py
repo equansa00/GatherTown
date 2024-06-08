@@ -1,30 +1,64 @@
 import json
-from geopy.geocoders import Nominatim
-from geopy.extra.rate_limiter import RateLimiter
+import requests
+from tqdm import tqdm
 
-geolocator = Nominatim(user_agent="reverse_geocoder")
-reverse = RateLimiter(geolocator.reverse, min_delay_seconds=1)
+# Load events from JSON file
+with open('/home/equansa00/Desktop/GatherTown/scripts/events.json', 'r') as f:
+    events = json.load(f)
 
-def reverse_geocode_events(file_path):
-    with open(file_path, 'r') as f:
-        events = json.load(f)
-    
-    for event in events:
-        try:
-            coordinates = event['location']['coordinates']
-            location = reverse((coordinates[1], coordinates[0]))
-            address_details = location.raw.get('address', {}) if location else {}
-            
-            event['location']['streetAddress'] = address_details.get('road', "Unknown Address")
-            event['location']['city'] = address_details.get('city', address_details.get('town', "Unknown"))
-            event['location']['state'] = address_details.get('state', address_details.get('county', "Unknown"))
-            event['location']['country'] = address_details.get('country', "Unknown")
-            event['location']['zipCode'] = address_details.get('postcode', "Unknown")
-        except Exception as e:
-            print(f"Error occurred while reverse geocoding coordinates {coordinates}: {e}")
-    
-    with open(file_path, 'w') as f:
-        json.dump(events, f, indent=4)
+# Function to reverse geocode coordinates
+def reverse_geocode(lat, lon):
+    api_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}"
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        return response.json()
+    return None
 
-reverse_geocode_events('/home/equansa00/Desktop/GatherTown/events.json')
-print("Reverse geocoding completed and addresses updated in events.json.")
+# Function to process events and update address information
+def process_events(events):
+    fixed_events = []
+    invalid_events = []
+    for event in tqdm(events, desc="Processing events"):
+        coordinates = event.get('coordinates')
+        if coordinates and len(coordinates) == 2:
+            lat, lon = coordinates
+            location_info = reverse_geocode(lat, lon)
+            if location_info:
+                address = location_info.get('address', {})
+                city = address.get('city', address.get('town', address.get('village')))
+                state = address.get('state')
+                country = address.get('country')
+                zip_code = address.get('postcode')
+                
+                if city and state and zip_code and country:
+                    event['location'] = {
+                        'city': city,
+                        'state': state,
+                        'country': country,
+                        'zip_code': zip_code
+                    }
+                    fixed_events.append(event)
+                else:
+                    invalid_events.append(event)
+            else:
+                invalid_events.append(event)
+        else:
+            invalid_events.append(event)
+    return fixed_events, invalid_events
+
+# Process the events
+fixed_events, invalid_events = process_events(events)
+
+# Save the results to a new JSON file
+results = {
+    "Total number of events": len(events),
+    "Number of fixed events": len(fixed_events),
+    "Number of invalid events": len(invalid_events),
+    "Fixed events": fixed_events,
+    "Invalid events": invalid_events
+}
+
+with open('/home/equansa00/Desktop/GatherTown/scripts/events_results.json', 'w') as f:
+    json.dump(results, f, indent=4)
+
+print(f"Results saved to /home/equansa00/Desktop/GatherTown/scripts/events_results.json")

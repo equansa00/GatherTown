@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import RandomEventsList from './RandomEventsList';
 import EventsNearby from './EventsNearby';
 import { fetchEventsNearby, fetchRandomEvents } from '../../api/eventsService';
@@ -16,7 +16,7 @@ const HomeEventsList = ({
 }) => {
   const [nearbyEventList, setNearbyEventList] = useState([]);
   const [randomEventList, setRandomEventList] = useState([]);
-  const [rsvpStatus, setRsvpStatus] = useState([]);
+  const [rsvpStatus, setRsvpStatus] = useState({}); // Use object for faster lookup
 
   const logMessage = (message) => {
     console.log(`[HomeEventsList] ${message}`);
@@ -44,7 +44,6 @@ const HomeEventsList = ({
       }));
 
       setNearbyEventList(eventsWithDistance);
-      setRsvpStatus(initializeRsvpStatus(eventsWithDistance));
 
       // Fetch Random Events
       const randomEvents = await fetchRandomEvents();
@@ -56,10 +55,10 @@ const HomeEventsList = ({
       }));
 
       setRandomEventList(randomEventsWithDistance);
-      setRsvpStatus(prevRsvpStatus => [
-        ...prevRsvpStatus,
-        ...initializeRsvpStatus(randomEventsWithDistance)
-      ]);
+
+      // Initialize RSVP statuses for all events (combining nearby and random)
+      const allEvents = [...eventsWithDistance, ...randomEventsWithDistance];
+      setRsvpStatus(initializeRsvpStatus(allEvents)); 
     } catch (error) {
       logMessage(`Error loading events: ${error.message}`);
       setLoadError('Failed to load events. Please try again later.');
@@ -71,7 +70,7 @@ const HomeEventsList = ({
 
   useEffect(() => {
     loadEvents();
-  }, [loadEvents]);
+  }, [loadEvents]); 
 
   const handleEventSelect = (event) => {
     logMessage(`Event selected: ${event.title}`);
@@ -81,8 +80,7 @@ const HomeEventsList = ({
   const handleRSVP = async (eventId, e) => {
     e.stopPropagation();
 
-    const currentRsvpStatus = rsvpStatus.find(status => status.eventId === eventId);
-    if (currentRsvpStatus?.isRSVPed) {
+    if (rsvpStatus[eventId]) { // Check if already RSVPed using the object
       alert('You have already RSVPed to this event.');
       return;
     }
@@ -119,4 +117,3 @@ const HomeEventsList = ({
 };
 
 export default HomeEventsList;
-

@@ -1,70 +1,58 @@
+// src/features/events/EventDetails.js
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { getEventDetails } from '../../api/eventsService';
 import { fetchAddress } from '../../utils/geolocationUtils';
+import UpdateEvent from './UpdateEvent';
 
-const EventDetails = () => {
-  const { eventId } = useParams();
-  const [eventDetails, setEventDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const EventDetails = ({ event, onUpdateEvent }) => {
   const [address, setAddress] = useState('Unknown Address');
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    if (!eventId) {
-      setLoading(false);
-      return;
+    if (event && event.location.coordinates) {
+      const [lng, lat] = event.location.coordinates;
+      fetchAddress(lat, lng).then(fetchedAddress => {
+        setAddress(fetchedAddress);
+      });
     }
+  }, [event]);
 
-    const fetchEvent = async () => {
-      try {
-        console.log(`Fetching details for event ID: ${eventId}`);
-        const details = await getEventDetails(eventId);
-        setEventDetails(details);
-        setLoading(false);
-        if (details.location.coordinates) {
-          const [lng, lat] = details.location.coordinates;
-          const fetchedAddress = await fetchAddress(lat, lng);
-          setAddress(fetchedAddress);
-        }
-      } catch (error) {
-        console.error('Error fetching event details:', error);
-        setError(error);
-        setLoading(false);
-      }
-    };
+  const handleUpdate = (updatedEvent) => {
+    onUpdateEvent(updatedEvent);
+    setIsEditing(false);
+  };
 
-    fetchEvent();
-  }, [eventId]);
-
-  if (loading) {
-    return <p>Loading event details...</p>;
-  }
-
-  if (error) {
-    return <p>Error loading event details: {error.message}</p>;
-  }
-
-  if (!eventDetails) {
-    return <p>No event details available</p>;
+  if (!event) {
+    return <p>No event selected</p>;
   }
 
   return (
     <div>
-      {eventDetails.images && eventDetails.images.length > 0 && (
+      {event.images && event.images.length > 0 && (
         <img
-          src={eventDetails.images[0]}
-          alt={eventDetails.title}
+          src={event.images[0]}
+          alt={event.title}
           style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
         />
       )}
-      <h2>{eventDetails.title}</h2>
-      <p>{eventDetails.description}</p>
-      <p>Date: {new Date(eventDetails.date).toLocaleDateString()} at {eventDetails.time}</p>
-      <p>Location: {address}</p>
+      <h2>{event.title}</h2>
+      <div style={{ marginTop: '20px' }}>
+        <h2>Event Details</h2>
+        <p>{event.description}</p>
+        <p>Date: {new Date(event.date).toLocaleDateString()} at {event.time}</p>
+        <p>Location: {address}</p>
+        <p>Category: {event.category}</p>
+        {event.isEditable && (
+          <div>
+            <button onClick={() => setIsEditing(!isEditing)}>Edit Event</button>
+            <button>Delete Event</button>
+          </div>
+        )}
+        {isEditing && (
+          <UpdateEvent eventId={event._id} initialEventData={event} onUpdate={handleUpdate} />
+        )}
+      </div>
     </div>
   );
 };
 
 export default EventDetails;
-
