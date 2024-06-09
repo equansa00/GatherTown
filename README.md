@@ -12,7 +12,7 @@ If you're hosting an event, GatherTown makes it simple. From detailed listings w
 Finding the perfect event is easy. Use our powerful search to filter by category, date, location, and more. Our interactive map gives you a visual overview of events near you.
 
 ## Connect with Your Community
-GatherTown is about more than just attending events. It's about connecting with others who share your passions. Share your experiences and discover new interests within your local community.
+GatherTown is more than just attending events, it's about connecting with others who share your passions. Share your experiences and discover new interests within your local community.
 
 # Ready to Dive In?
 ## Get the Code
