@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import './CreateEvent.css';
 
 const CreateEvent = () => {
   const [eventData, setEventData] = useState({
@@ -98,6 +99,9 @@ const CreateEvent = () => {
   };
 
   return (
+    <div className="create-event-container">
+            <h1>Create Event</h1>
+
     <form onSubmit={handleFormSubmit}>
       <label>
         Title:
@@ -214,6 +218,7 @@ const CreateEvent = () => {
       </label>
       <button type="submit">Create Event</button>
     </form>
+    </div>
   );
 };
 

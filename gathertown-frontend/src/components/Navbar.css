@@ -1,26 +1,28 @@
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #1a1a1a;
-    padding: 0.5em 1em;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .navbar a {
-    color: #ffffff;
-    text-decoration: none;
-    margin: 0 1em;
-    font-weight: bold;
-  }
-  
-  .navbar a:hover {
-    color: #4d6150;
-  }
-  
+/* Navbar Styles */
+.navbar {  /* Main navbar container */
+  background-color: #482FF7; /* Vibrant purple */
+  color: white;
+  padding: 1em 2em;     
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  border-radius: 8px;  
+}
+
+/* Navbar Links */
+.navbar a {
+  color: white;
+  text-decoration: none;
+  margin: 0 1.5em; 
+  font-weight: 500;  
+  transition: color 0.2s ease-in-out;
+}
+
+.navbar a:hover {
+  color: #FFCC70; 
+}
+ 
 
   nav {
-    background-color: #3a497a;
+    background-image: linear-gradient(to right, #4f74ec, #0d193a); /* Darker to lighter blue */
     color: white;
     padding: 10px;
   }

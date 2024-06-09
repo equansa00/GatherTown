@@ -1,0 +1,54 @@
+/* CreateEvent.css */
+
+/* Container for Form */
+.create-event-container {
+    max-width: 100%; 
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    font-family: 'Montserrat', sans-serif;  /* Set the font for the entire container */
+}
+
+/* Form Styles */
+form label {
+    display: block;
+    margin-bottom: 8px;       /* Increase spacing between labels and inputs */
+    font-size: 18px;          /* Larger font size for labels */
+    font-weight: 500;         /* Slightly bolder labels */
+}
+
+form input, form textarea, form select {
+    width: 100%;
+    padding: 12px;          /* Increase padding for a more spacious look */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;          /* Larger font size for inputs */
+}
+
+form textarea {
+    resize: vertical; /* Allow vertical resizing for the description textarea */
+    min-height: 100px;
+}
+
+form input[type="file"] {
+    padding: 0;
+}
+
+/* Button Styling */
+form button[type="submit"] {
+    padding: 10px 20px;
+    background-color: #482FF7; /* Color from header gradient */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    transition: background-color 0.2s;
+}
+
+form button[type="submit"]:hover {
+    background-color: #6A5ACD; /* Slightly darker shade of purple on hover */
+}

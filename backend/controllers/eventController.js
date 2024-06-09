@@ -77,54 +77,6 @@ exports.getEvents = async (req, res) => {
   }
 };
 
-// const buildFilter = (query) => {
-//   const filter = {};
-//   if (query.title) filter.title = new RegExp(query.title, 'i');
-//   if (query.category) filter.category = new RegExp(query.category, 'i');
-//   if (query.country) filter['location.country'] = query.country;
-//   if (query.state) filter['location.state'] = query.state;
-//   if (query.city) filter['location.city'] = query.city;
-//   if (query.zipCode) filter['location.zipCode'] = query.zipCode;
-//   if (query.startDate || query.endDate) {
-//     filter.date = {};
-//     if (query.startDate) filter.date.$gte = new Date(query.startDate);
-//     if (query.endDate) filter.date.$lte = new Date(query.endDate);
-//   }
-//   logger.info(`Constructed filter: ${JSON.stringify(filter)}`); // Log the constructed filter for debugging
-//   return filter;
-// };
-
-// exports.getEvents = async (req, res) => {
-//   const { page = 0, limit = 10 } = req.query;
-//   const pageNum = parseInt(page, 10);
-//   const limitNum = parseInt(limit, 10);
-
-//   if (isNaN(pageNum) || isNaN(limitNum)) {
-//     return res.status(400).json({ message: "Page and limit must be valid numbers" });
-//   }
-
-//   const filter = buildFilter(req.query);
-
-//   try {
-//     logger.info(`Filter being used: ${JSON.stringify(filter)}`); // Log the filter to be used in the query
-//     const events = await Event.find(filter).skip(pageNum * limitNum).limit(limitNum);
-//     const totalEvents = await Event.countDocuments(filter);
-
-//     logger.info(`Events found: ${events.length}, Total events: ${totalEvents}`); // Log the number of events found
-//     events.forEach(event => logger.info(`Event Title: ${event.title}`)); // Log the titles of found events
-
-//     res.status(200).json({
-//       events,
-//       totalEvents,
-//       page: pageNum,
-//       totalPages: Math.ceil(totalEvents / limitNum),
-//     });
-//   } catch (error) {
-//     logger.error('Server Error:', error);
-//     res.status(500).json({ error: 'Server error', details: error.message });
-//   }
-// };
-
 // Get all events with optional filtering
 exports.getAllEvents = async (req, res) => {
   const { category, country, state, page = 0, limit = 10 } = req.query;

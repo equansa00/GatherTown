@@ -58,7 +58,7 @@ const MapComponent = ({ center = [0, 0], zoom = 12, events = [], selectedEvent }
     }
   }, [selectedEvent]);
 
-  return <div ref={mapContainer} style={{ width: '100%', height: '500px' }} />;
+  return <div ref={mapContainer} style={{ width: '100%', height: '1000px' }} />;
 };
 
 export default MapComponent;

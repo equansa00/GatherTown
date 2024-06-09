@@ -1,78 +1,204 @@
-/* index.css */
+/* HomePage.css */
 @import url('leaflet/dist/leaflet.css');
-
 
 /* General Styling */
 body, html {
-    height: 100%;
-    margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    background-color: #f5f5f5; /* Light gray background */
-    color: #333; /* Dark gray text */
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Montserrat', sans-serif; 
+  background-color: #eee8e8; /* Muted background */
+  color: #333; /* Dark gray text */
 }
 
 /* Container */
 .outer-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* Header */
 .header {
-    background: linear-gradient(to right, #4158D0, #C850C0, #FFCC70); /* Vibrant gradient */
-    color: white;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+  background: linear-gradient(to right, #482FF7, #6A5ACD); /* Blue and purple gradient */
+  color: white;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
+  margin-bottom: 10px; 
 }
 
 /* Main Content */
 .main-content {
-    display: flex;
-    justify-content: space-around; /* Evenly space the map and event sections */
-    padding: 20px;
-    height: calc(100vh - 80px); /* Adjust based on your header height */
+  flex: 1;
+  display: flex;
+  flex-direction: row;
 }
 
-/* Map Container */
-.map-container {
-    width: 60%;  /* Adjust map width as needed */
-    height: 100%; /* Make the map take the full height */
-    border-radius: 10px; /* Rounded corners */
-    background: gray;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* More pronounced shadow */
+/* Events Column */
+.events-column {
+  width: 35%;
+  margin-right: 20px;
+  overflow-y: auto;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.events-column::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
-/* Events Section */
-.events-section {
-    width: 35%; /* Adjust events section width as needed */
-    display: flex;
-    flex-direction: column;
+.events-column h1 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
 }
 
-.nearby-events, .event-details, .random-events {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    margin-bottom: 20px; /* Add space between sections */
-    overflow-y: auto;
-    max-height: 45%; /* Adjust based on your preference */
-}
-
-.nearby-events h2, .event-details h2, .random-events h2 {
-    margin-top: 0;
+.event-list {
+  max-height: calc(100vh - 160px); /* Ensure event list doesn't overflow viewport */
 }
 
 .event-item {
-    border-bottom: 1px solid #eee; /* Subtle separator */
-    padding: 15px 0;
-    transition: transform 0.2s, box-shadow 0.2s; /* Add smooth transitions */
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .event-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
+
+.event-item h2 {
+  font-size: 1.4rem;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.event-details-overlay {
+  margin-top: 10px;
+  line-height: 1.5;
+  display: none;
+}
+
+.event-item:hover .event-details-overlay {
+  display: block;
+}
+
+.event-details-overlay p {
+  margin-bottom: 5px;
+}
+
+.event-details-overlay img {
+  max-width: 100%;
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 5px; /* Slightly round image corners */
+  margin: 5px;
+}
+
+/* Map Column */
+.map-column {
+  width: 65%;
+}
+
+
+/* General Container Styles */
+.login-container {
+  display: flex; /* Enable flexbox for centering */
+  justify-content: center;  /* Center horizontally */
+  align-items: center;      /* Center vertically */
+  flex-direction: column;   /* Align items vertically */
+  min-height: 100vh;        /* Ensure full viewport height */
+  padding: 20px;           /* Add some padding for visual comfort */
+}
+
+/* Form Container Styles */
+.login-container form {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 90%; /* Take up 90% of the container width (adjust as needed) */
+  max-width: 800px; /* Adjust width as needed */
+}
+
+/* Input and Button Styles */
+.login-container input[type="email"],
+.login-container input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.login-container button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Container for Form */
+.register-container {
+  display: flex; /* Enable flexbox for centering */
+  justify-content: center;  /* Center horizontally */
+  align-items: center;      /* Center vertically */
+  flex-direction: column;   /* Align items vertically */
+  min-height: 100vh;        /* Ensure full viewport height */
+  padding: 20px;           /* Add some padding for visual comfort */
+}
+
+/* Form Container Styles */
+.register-container form {
+  width: 80%;              /* Takes up 80% of the parent container width */
+  max-width: 800px;      /* Set a maximum width for larger screens */
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Input and Button Styles */
+.register-container input[type="text"],
+.register-container input[type="email"],
+.register-container input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 18px;
+}
+
+.register-container button[type="submit"] {
+  background-color: #482FF7; /* Color from header gradient */
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 18px;
+  transition: background-color 0.2s;
+}
+
+.register-container button[type="submit"]:hover {
+  background-color: #6A5ACD; /* Slightly darker shade of purple on hover */
+}
+
+/* Error/Success Message Styling */
+.error { color: red; }
+.success { color: green; }

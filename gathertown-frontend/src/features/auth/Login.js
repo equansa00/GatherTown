@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { forgotPassword } from '../../api/authService'; // Correctly import the login function
+import '../../pages/HomePage.css';
 
 const Login = () => {
   const { user, loginUser } = useAuth();
@@ -49,7 +50,7 @@ const Login = () => {
   };
 
   return (
-    <div>
+    <div className="login-container">
       {user ? (
         <p>You are already logged in as {user.username}</p>
       ) : (

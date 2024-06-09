@@ -101,7 +101,6 @@ export const forgotPassword = async (email) => {
   }
 };
 
-
 // Function to reset password
 export const resetPassword = async (token, password) => {
   return await axios.post(`${API_URL}/reset-password/${token}`, { password });
@@ -138,3 +137,4 @@ export const fetchUser = async () => {
 
   return response.json();
 };
+

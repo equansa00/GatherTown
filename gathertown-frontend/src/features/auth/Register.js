@@ -1,6 +1,7 @@
 //gathertown-frontend/src/features/auth/Register.js
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import '../../pages/HomePage.css';
 
 const RegisterForm = () => {
     const { registerUser } = useAuth();
@@ -47,6 +48,9 @@ const RegisterForm = () => {
     };
 
     return (
+    <div className="register-container">
+              <h1>Register</h1>
+
         <form onSubmit={handleSubmit}>
             <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} required />
             <input type="text" name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} required />
@@ -58,6 +62,7 @@ const RegisterForm = () => {
             {errors.global && <p className="error">{errors.global}</p>}
             <button type="submit">Register</button>
         </form>
+    </div>
     );
 };
 

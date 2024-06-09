@@ -81,9 +81,8 @@ export const fetchAllEvents = async (params) => {
   }
 };
 
-// Fetch Events by Zip Code
-export const fetchEventsByZip = async (zipCode, page = 0) => {
-  const url = `${API_URL}/by-zip`;
+export const fetchEventsByZip = async (zipCode, page = 1) => {
+  const url = `${API_URL}/events/by-zip`;
   logMessage(`Fetching events by zip code: ${zipCode}, page: ${page}`);
   
   try {
@@ -91,7 +90,7 @@ export const fetchEventsByZip = async (zipCode, page = 0) => {
       headers: getAuthHeader(),
       params: { zipCode, page }
     });
-    logMessage(`Fetched events by zip: ${response.data.length}`);
+    logMessage(`Fetched events by zip: ${response.data.events.length}`);
     return response.data;
   } catch (error) {
     logMessage('Error fetching events by zip');

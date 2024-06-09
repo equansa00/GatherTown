@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
@@ -13,8 +12,10 @@ import AllEventsList from './features/events/AllEventsList';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import { AuthProvider } from './context/AuthContext';
-import EventDetails from './features/events/EventDetails';
-import './App.css'; // Assuming you have some basic styling here
+import EventDetailsPage from './pages/EventDetailsPage';
+import ProfilePage from './pages/ProfilePage';
+import UpdateEvent from './features/events/UpdateEvent'; // Import UpdateEvent component
+import './App.css';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -47,10 +48,10 @@ const App = () => {
         <ErrorBoundary>
           <Navbar />
           <Routes>
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
-                <HomePage 
+                <HomePage
                   isLoading={isLoading}
                   setIsLoading={setIsLoading}
                   loadError={loadError}
@@ -61,18 +62,23 @@ const App = () => {
                   selectedEvent={selectedEvent}
                   setSelectedEvent={setSelectedEvent}
                 />
-              } 
+              }
             />
-            <Route path="/events/:eventId" element={<EventDetails event={selectedEvent} events={[]} onUpdateEvent={handleUpdateEvent} />} />
+            <Route
+              path="/events/:id"
+              element={<EventDetailsPage onUpdateEvent={handleUpdateEvent} />}
+            />
             <Route path="/all-events/:eventId" element={<AllEventsList />} />
-            <Route path="/map/:eventId" element={<EventDetails />} />
+            <Route path="/map/:eventId" element={<EventDetailsPage onUpdateEvent={handleUpdateEvent} />} />
             <Route path="/events" element={<AllEventsPage />} />
             <Route path="/create-event" element={<CreateEvent />} />
             <Route path="/all-events" element={<AllEventsPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/login" element={<Login onLogin={setUser} />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/edit-event/:eventId" element={<UpdateEvent onUpdate={handleUpdateEvent} />} /> {/* Add route for updating event */}
           </Routes>
           <Footer />
         </ErrorBoundary>
@@ -82,3 +88,4 @@ const App = () => {
 };
 
 export default App;
+

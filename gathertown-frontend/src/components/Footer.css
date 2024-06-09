@@ -1,8 +1,8 @@
-.footer {
-    background-color: #3a497a;
-    color: #ffffff;
-    text-align: center;
-    padding: 1em;
-    margin-top: auto;
-  }
-  
+/* Updated Footer Styles */
+footer {
+  background-color: #1a1a1a; /* Darker gray for contrast */
+  color: white;
+  text-align: center;
+  padding: 1em 2em; /* Increased padding */
+  flex-shrink: 0; 
+}

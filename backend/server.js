@@ -13,7 +13,11 @@ const logger = require('./config/logger');
 const app = express();
 
 // List of allowed origins
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://gathertown-frontend.onrender.com' // Add your Render frontend URL here
+];
 
 // CORS middleware setup
 app.use(cors({
