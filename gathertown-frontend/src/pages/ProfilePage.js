@@ -1,3 +1,4 @@
+// src/pages/ProfilePage.js
 import React, { useState, useEffect } from 'react';
 import { getUserProfile, updateUserProfile, changePassword } from '../api/userService';
 import { deleteEvent } from '../api/eventsService';
@@ -14,24 +15,36 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { user, createdEvents, rsvpedEvents } = await getUserProfile();
-      setUser(user);
-      setCreatedEvents(createdEvents);
-      setRsvpedEvents(rsvpedEvents);
-      setProfileForm({ name: user.name, email: user.email });
+      try {
+        const { user, createdEvents, rsvpedEvents } = await getUserProfile();
+        setUser(user);
+        setCreatedEvents(createdEvents);
+        setRsvpedEvents(rsvpedEvents);
+        setProfileForm({ name: user.name, email: user.email });
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
     };
     fetchProfile();
   }, []);
 
   const handleProfileUpdate = async () => {
-    const updatedUser = await updateUserProfile(profileForm);
-    setUser(updatedUser);
-    setEditMode(false);
+    try {
+      const updatedUser = await updateUserProfile(profileForm);
+      setUser(updatedUser);
+      setEditMode(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
   };
 
   const handleChangePassword = async () => {
-    await changePassword(passwordForm);
-    setPasswordForm({ currentPassword: '', newPassword: '' });
+    try {
+      await changePassword(passwordForm);
+      setPasswordForm({ currentPassword: '', newPassword: '' });
+    } catch (error) {
+      console.error('Failed to change password:', error);
+    }
   };
 
   const handleDeleteEvent = async (eventId) => {
@@ -114,6 +127,5 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
 
 

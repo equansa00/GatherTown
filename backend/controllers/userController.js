@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Event = require('../models/Event'); // Ensure Event model is imported
+const Event = require('../models/Event');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/sendEmail');
 
@@ -9,7 +9,10 @@ const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
-// Register User
+const generateRefreshToken = (userId) => {
+    return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+};
+
 exports.registerUser = async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
 
@@ -39,8 +42,9 @@ exports.registerUser = async (req, res) => {
 
         const savedUser = await user.save();
         const token = generateToken(savedUser._id.toString());
+        const refreshToken = generateRefreshToken(savedUser._id.toString());
 
-        res.status(201).json({ user: savedUser, token });
+        res.status(201).json({ user: savedUser, token, refreshToken });
     } catch (err) {
         console.error('Registration error:', err);
         if (err.name === 'ValidationError') {
@@ -50,7 +54,6 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-// Login User
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
@@ -70,11 +73,27 @@ exports.loginUser = async (req, res) => {
         }
 
         const token = generateToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
 
-        res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+        res.json({ token, refreshToken, user: { id: user._id, username: user.username, email: user.email } });
     } catch (error) {
         console.error(`Login error for ${email}:`, error);
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+exports.refreshToken = async (req, res) => {
+    const { token } = req.body;
+    if (!token) {
+        return res.status(400).json({ message: 'Refresh token is required' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+        const newToken = generateToken(decoded.id);
+        res.json({ accessToken: newToken });
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid refresh token' });
     }
 };
 

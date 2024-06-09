@@ -94,7 +94,7 @@ const eventSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-});
+}, { timestamps: true });
 
 eventSchema.pre('save', function (next) {
   if (this.isNew || this.isModified('date')) {

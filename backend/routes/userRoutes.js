@@ -9,12 +9,16 @@ router.get('/verify-email/:token', userController.verifyEmail);
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password/:token', userController.resetPassword);
 
-// Profile-related routes
 router.get('/profile', authMiddleware, userController.getUserProfile);
 router.put('/profile', authMiddleware, userController.updateUserProfile);
 router.put('/change-password', authMiddleware, userController.changePassword);
 
+router.post('/refresh-token', userController.refreshToken);
+
 module.exports = router;
+
+
+
 
 
 

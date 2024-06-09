@@ -1,35 +1,32 @@
 // src/api/userService.js
-import axios from 'axios';
-import config from '../config';
-
-const API_URL = config.API_URL;
+import axiosInstance from '../utils/axiosInstance';
 
 export const getUserProfile = async () => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('No token found');
-
-  const response = await axios.get(`${API_URL}/users/profile`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+  try {
+    const response = await axiosInstance.get('/users/profile');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
 };
 
 export const changePassword = async (passwordData) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('No token found');
-
-  const response = await axios.put(`${API_URL}/users/change-password`, passwordData, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+  try {
+    const response = await axiosInstance.put('/users/change-password', passwordData);
+    return response.data;
+  } catch (error) {
+    console.error('Error changing password:', error);
+    throw error;
+  }
 };
 
 export const updateUserProfile = async (profileData) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('No token found');
-
-  const response = await axios.put(`${API_URL}/users/profile`, profileData, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+  try {
+    const response = await axiosInstance.put('/users/profile', profileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    throw error;
+  }
 };

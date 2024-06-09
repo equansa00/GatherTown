@@ -6,17 +6,16 @@ import './Navbar.css';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  console.log('Navbar: user:', user); 
+  console.log('Navbar: user:', user);
 
   return (
-    <nav>
-      <h1>GatherTown</h1>
+    <nav className="navbar">
+      <div className="navbar-brand">GatherTown</div>
       <ul>
         <li><Link to="/">Home</Link></li>
         <li><Link to="/all-events">All Events</Link></li>
         <li><Link to="/create-event">Create Event</Link></li>
-        <li><Link to="/profile">Profile</Link></li> {/* Add a link to the profile page */}
-
+        <li><Link to="/profile">Profile</Link></li>
         {!user ? (
           <>
             <li><Link to="/login">Login</Link></li>
@@ -25,7 +24,7 @@ const Navbar = () => {
         ) : (
           <>
             <li>Welcome, {user.username}</li>
-            <li><button onClick={logout}>Logout</button></li>
+            <li><button onClick={logout} className="logout-button">Logout</button></li>
           </>
         )}
       </ul>
@@ -34,7 +33,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-
-
-
