@@ -56,31 +56,31 @@ exports.registerUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
-
+  
     try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "No account found with that email. Please register." });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: "Invalid credentials" });
-        }
-
-        if (!user.verified) {
-            return res.status(403).json({ message: "Your account has not been verified." });
-        }
-
-        const token = generateToken(user._id);
-        const refreshToken = generateRefreshToken(user._id);
-
-        res.json({ token, refreshToken, user: { id: user._id, username: user.username, email: user.email } });
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "No account found with that email. Please register." });
+      }
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+  
+      if (!user.verified) {
+        return res.status(403).json({ message: "Your account has not been verified." });
+      }
+  
+      const token = generateToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+  
+      res.json({ token, refreshToken, user: { id: user._id, username: user.username, email: user.email } });
     } catch (error) {
-        console.error(`Login error for ${email}:`, error);
-        res.status(500).json({ message: "Server error" });
+      console.error(`Login error for ${email}:`, error);
+      res.status(500).json({ message: "Server error" });
     }
-};
+  };
 
 exports.refreshToken = async (req, res) => {
     const { token } = req.body;

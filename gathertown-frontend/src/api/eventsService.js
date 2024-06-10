@@ -141,17 +141,13 @@ export const updateEvent = async (id, eventData) => {
 };
 
 // Delete Event
-export const deleteEvent = async (id) => {
-  logMessage(`Deleting event ID: ${id}`);
-  try {
-    const response = await axios.delete(`${API_URL}/${id}`, { headers: getAuthHeader() });
-    logMessage('Event deleted successfully');
-    return response.data;
-  } catch (error) {
-    logMessage('Error deleting event');
-    handleAxiosError(error);
-    throw error;
-  }
+export const deleteEvent = async (eventId) => {
+  const response = await axios.delete(`${API_URL}/${eventId}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  return response.data;
 };
 
 // RSVP to Event

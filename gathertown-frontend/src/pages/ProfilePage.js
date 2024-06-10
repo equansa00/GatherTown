@@ -1,4 +1,3 @@
-// src/pages/ProfilePage.js
 import React, { useState, useEffect } from 'react';
 import { getUserProfile, updateUserProfile, changePassword } from '../api/userService';
 import { deleteEvent } from '../api/eventsService';
@@ -20,7 +19,7 @@ const ProfilePage = () => {
         setUser(user);
         setCreatedEvents(createdEvents);
         setRsvpedEvents(rsvpedEvents);
-        setProfileForm({ name: user.name, email: user.email });
+        setProfileForm({ name: user.firstName, email: user.email });
       } catch (error) {
         console.error('Failed to fetch profile:', error);
       }
@@ -80,7 +79,7 @@ const ProfilePage = () => {
           </>
         ) : (
           <>
-            <p>Name: {user.name}</p>
+            <p>Name: {user.firstName}</p>
             <p>Email: {user.email}</p>
             <button onClick={() => setEditMode(true)}>Edit</button>
           </>
