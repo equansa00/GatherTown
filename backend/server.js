@@ -1,4 +1,11 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+} else {
+  dotenv.config({ path: '.env.development' });
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -89,6 +96,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = app;
+
 
 
 
