@@ -1,4 +1,3 @@
-/* Navbar Styles */
 .navbar {
   position: relative; /* Ensure positioning context for the ::after pseudo-element */
   display: flex; /* Use flexbox for layout */

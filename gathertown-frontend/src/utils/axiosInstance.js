@@ -1,44 +1,57 @@
-// src/utils/axiosInstance.js
+///home/equansa00/Desktop/GatherTown/gathertown-frontend/src/utils/axiosInstance.js
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-axiosInstance.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config;
-
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const { data } = await axios.post('http://localhost:5000/api/users/refresh-token', {
-          token: localStorage.getItem('refreshToken'),
-        });
-        localStorage.setItem('accessToken', data.accessToken);
-        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
-        originalRequest.headers['Authorization'] = `Bearer ${data.accessToken}`;
-        return axiosInstance(originalRequest);
-      } catch (err) {
-        console.error(err);
-        return Promise.reject(error);
-      }
-    }
-
+// Adding interceptors for logging requests and responses
+axiosInstance.interceptors.request.use(
+  (request) => {
+    console.log('Request:', {
+      url: request.url,
+      method: request.method,
+      headers: request.headers,
+      params: request.params,
+      data: request.data,
+    });
+    return request;
+  },
+  (error) => {
+    console.error('Request Error:', error.message);
     return Promise.reject(error);
   }
 );
 
-axiosInstance.interceptors.request.use(config => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+axiosInstance.interceptors.response.use(
+  (response) => {
+    console.log('Response:', {
+      url: response.config.url,
+      method: response.config.method,
+      status: response.status,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      console.error('Error Response:', {
+        url: error.response.config.url,
+        method: error.response.config.method,
+        status: error.response.status,
+        data: error.response.data,
+      });
+    } else if (error.request) {
+      console.error('No Response Received:', error.request);
+    } else {
+      console.error('Request Error:', error.message);
+    }
+    return Promise.reject(error);
   }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+);
 
 export default axiosInstance;
 

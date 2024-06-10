@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUserProfile, updateUserProfile, changePassword } from '../api/userService';
+import { getUserProfile, updateUserProfile, changePassword } from '../services/profileService';
 import { deleteEvent } from '../api/eventsService';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -137,5 +137,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
-

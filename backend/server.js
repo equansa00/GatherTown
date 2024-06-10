@@ -1,67 +1,56 @@
+// backend/app.js
 const dotenv = require('dotenv');
 const path = require('path');
-
-// Load environment variables based on NODE_ENV
-if (process.env.NODE_ENV === 'production') {
-  dotenv.config({ path: path.join(__dirname, '.env.production') });
-} else {
-  dotenv.config({ path: path.join(__dirname, '.env.development') });
-}
-
 const express = require('express');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const { connectDB } = require('./db');
 const { handleErrors } = require('./middleware/errorHandlers');
+const logRequestDetails = require('./middleware/logRequestDetails');
 const logger = require('./config/logger');
+
+// Load environment variables
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: path.join(__dirname, '.env.production') });
+} else {
+  dotenv.config({ path: path.join(__dirname, '.env.development') });
+}
 
 const app = express();
 
 const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://gathertown-frontend.onrender.com'
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://gathertown-frontend.onrender.com'
 ];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-    logger.info({
-        method: req.method,
-        path: req.originalUrl,
-        params: req.params,
-        query: req.query,
-        body: req.body,
-        headers: req.headers,
-        userId: req.user ? req.user.id : 'Guest',
-        sessionID: req.sessionID ? req.sessionID : 'No session',
-    });
-    next();
-});
+// Use the request logging middleware
+app.use(logRequestDetails);
 
 const envVars = ['MONGO_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'MAPBOX_ACCESS_TOKEN', 'EMAIL_USER', 'EMAIL_PASS', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
 envVars.forEach(env => {
-    if (process.env[env]) {
-        console.log(`${env} loaded successfully:`, env === 'JWT_SECRET' || env === 'JWT_REFRESH_SECRET' ? '[HIDDEN]' : process.env[env]);
-    } else {
-        console.error(`Error: Missing ${env}`);
-    }
+  if (process.env[env]) {
+    console.log(`${env} loaded successfully:`, env === 'JWT_SECRET' || env === 'JWT_REFRESH_SECRET' ? '[HIDDEN]' : process.env[env]);
+  } else {
+    console.error(`Error: Missing ${env}`);
+  }
 });
 
 console.log('Database URI:', process.env.MONGO_URI);
@@ -73,17 +62,17 @@ connectDB();
 console.log('Connected to MongoDB.');
 
 const routeMiddlewares = [
-    { path: '/api/users', middleware: userRoutes },
-    { path: '/api/events', middleware: eventRoutes },
+  { path: '/api/users', middleware: userRoutes },
+  { path: '/api/events', middleware: eventRoutes },
 ];
 
 routeMiddlewares.forEach(({ path, middleware }) => {
-    if (typeof middleware === 'function' || Array.isArray(middleware)) {
-        console.log(`Adding middleware for path: ${path}`);
-        app.use(path, middleware);
-    } else {
-        console.error(`Invalid middleware for path: ${path}`);
-    }
+  if (typeof middleware === 'function' || Array.isArray(middleware)) {
+    console.log(`Adding middleware for path: ${path}`);
+    app.use(path, middleware);
+  } else {
+    console.error(`Invalid middleware for path: ${path}`);
+  }
 });
 
 app.use(handleErrors);
@@ -91,10 +80,10 @@ app.use(handleErrors);
 console.log('Routes set up.');
 
 if (process.env.NODE_ENV !== 'test') {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
-    });
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
 }
 
 module.exports = app;

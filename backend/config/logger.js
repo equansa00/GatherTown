@@ -1,3 +1,4 @@
+///home/equansa00/Desktop/GatherTown/backend/config/logger.js
 const { createLogger, format, transports } = require('winston');
 
 const logger = createLogger({

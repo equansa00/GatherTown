@@ -1,3 +1,4 @@
+///home/equansa00/Desktop/GatherTown/backend/controllers/eventController.js
 const axios = require('axios');
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
