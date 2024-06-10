@@ -8,7 +8,7 @@
   height: 80px; /* Adjust height if necessary */
   z-index: 1; /* Ensure it stays above other elements */
   color: white; /* Ensures the text color contrasts with the background */
-  background: linear-gradient(to left, rgba(0, 0, 0, 0.5), transparent 50%); /* Gradient fade effect */
+  background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%); /* Gradient background */
 }
 
 .navbar ul {
@@ -49,20 +49,6 @@
   bottom: 0;
   background: linear-gradient(to right, rgba(0, 0, 0, 0.5), transparent 50%); /* Adjust transparency */
   z-index: -1; /* Places the overlay behind the content */
-}
-
-/* Transparent Background Image */
-.navbar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/home/equansa00/Desktop/GatherTown/gathertown-frontend/images/Gemini_Generated_Image_25rts625rts625rt.jpeg') no-repeat right;
-  background-size: 150%; /* Zoom out the image */
-  opacity: 0.5; /* Adjust opacity for transparency */
-  z-index: -2; /* Places the image behind the gradient overlay */
 }
 
 /* Brand/Logo Styling */
