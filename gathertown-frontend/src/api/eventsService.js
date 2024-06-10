@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAuthHeader } from '../utils/auth';
+import { getAuthHeader, getToken } from '../utils/auth';
 
 // Logging functions
 const logMessage = (message) => {

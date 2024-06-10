@@ -7,3 +7,5 @@ export function getAuthHeader() {
     return {}; 
   }
 }
+
+export const getToken = () => localStorage.getItem('token');

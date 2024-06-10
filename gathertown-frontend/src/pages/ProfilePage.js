@@ -10,6 +10,9 @@ const ProfilePage = () => {
   const [editMode, setEditMode] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [profileForm, setProfileForm] = useState({ name: '', email: '' });
+  const [passwordChangeMessage, setPasswordChangeMessage] = useState('');
+  const [eventUpdateMessage, setEventUpdateMessage] = useState('');
+  const [eventDeleteMessage, setEventDeleteMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +35,7 @@ const ProfilePage = () => {
       const updatedUser = await updateUserProfile(profileForm);
       setUser(updatedUser);
       setEditMode(false);
+      setEventUpdateMessage('Profile updated successfully');
     } catch (error) {
       console.error('Failed to update profile:', error);
     }
@@ -39,8 +43,9 @@ const ProfilePage = () => {
 
   const handleChangePassword = async () => {
     try {
-      await changePassword(passwordForm);
+      const response = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
       setPasswordForm({ currentPassword: '', newPassword: '' });
+      setPasswordChangeMessage(response.message); // Set the success message
     } catch (error) {
       console.error('Failed to change password:', error);
     }
@@ -50,6 +55,7 @@ const ProfilePage = () => {
     try {
       await deleteEvent(eventId);
       setCreatedEvents(createdEvents.filter(event => event._id !== eventId));
+      setEventDeleteMessage('Event deleted successfully');
     } catch (error) {
       console.error('Failed to delete event:', error);
       alert('Failed to delete event. Please try again later.');
@@ -84,6 +90,7 @@ const ProfilePage = () => {
             <button onClick={() => setEditMode(true)}>Edit</button>
           </>
         )}
+        {eventUpdateMessage && <p>{eventUpdateMessage}</p>} {/* Display the success message for profile update */}
       </div>
       <div className="change-password">
         <h2>Change Password</h2>
@@ -100,6 +107,7 @@ const ProfilePage = () => {
           placeholder="New Password"
         />
         <button onClick={handleChangePassword}>Change Password</button>
+        {passwordChangeMessage && <p>{passwordChangeMessage}</p>} {/* Display the success message */}
       </div>
       <div className="events-list">
         <h2>Events Created</h2>
@@ -112,6 +120,7 @@ const ProfilePage = () => {
             </li>
           ))}
         </ul>
+        {eventDeleteMessage && <p>{eventDeleteMessage}</p>} {/* Display the success message for event deletion */}
         <h2>Events RSVPed</h2>
         <ul>
           {rsvpedEvents.map(event => (
@@ -126,5 +135,4 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
 
