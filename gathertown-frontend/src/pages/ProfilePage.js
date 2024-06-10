@@ -46,6 +46,8 @@ const ProfilePage = () => {
       const response = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
       setPasswordForm({ currentPassword: '', newPassword: '' });
       setPasswordChangeMessage(response.message); // Set the success message
+      alert('Password changed successfully. Please sign in again.');
+      navigate('/login'); // Redirect to login page
     } catch (error) {
       console.error('Failed to change password:', error);
     }
@@ -135,4 +137,5 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
 
