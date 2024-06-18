@@ -1,4 +1,5 @@
-///home/equansa00/Desktop/GatherTown/backend/controllers/eventController.js
+// /home/equansa00/Desktop/GatherTown/backend/controllers/eventController.js
+
 const axios = require('axios');
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
@@ -30,7 +31,6 @@ const uploadImage = async (imagePath) => {
 const buildFilter = (query) => {
   const filter = {};
   if (query.title) {
-    // Use regular expression to match partial keywords
     filter.title = new RegExp(query.title, 'i');
   }
   if (query.category) filter.category = new RegExp(query.category, 'i');
@@ -43,40 +43,58 @@ const buildFilter = (query) => {
     if (query.startDate) filter.date.$gte = new Date(query.startDate);
     if (query.endDate) filter.date.$lte = new Date(query.endDate);
   }
-  logger.info(`Constructed filter: ${JSON.stringify(filter)}`); // Log the constructed filter for debugging
+  logger.info(`Constructed filter: ${JSON.stringify(filter)}`);
   return filter;
 };
 
+/// Function to get both nearby and international events
 exports.getEvents = async (req, res) => {
-  const { page = 0, limit = 10 } = req.query;
-  const pageNum = parseInt(page, 10);
-  const limitNum = parseInt(limit, 10);
-
-  if (isNaN(pageNum) || isNaN(limitNum)) {
-    return res.status(400).json({ message: "Page and limit must be valid numbers" });
-  }
-
-  const filter = buildFilter(req.query);
-
   try {
-    logger.info(`Filter being used: ${JSON.stringify(filter)}`); // Log the filter to be used in the query
-    const events = await Event.find(filter).skip(pageNum * limitNum).limit(limitNum);
-    const totalEvents = await Event.countDocuments(filter);
+    const { latitude, longitude, range = 10000 } = req.query;
 
-    logger.info(`Events found: ${events.length}, Total events: ${totalEvents}`); // Log the number of events found
-    events.forEach(event => logger.info(`Event Title: ${event.title}`)); // Log the titles of found events
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: 'Latitude and longitude are required' });
+    }
+
+    const nearbyEvents = await Event.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [longitude, latitude]
+          },
+          $maxDistance: range // Adjust the distance as needed
+        }
+      }
+    });
+
+    const internationalEvents = await Event.find({
+      location: {
+        $not: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [longitude, latitude]
+            },
+            $maxDistance: range
+          }
+        }
+      }
+    });
+
+    const events = [...nearbyEvents, ...internationalEvents];
 
     res.status(200).json({
       events,
-      totalEvents,
-      page: pageNum,
-      totalPages: Math.ceil(totalEvents / limitNum),
+      totalEvents: events.length,
+      page: 0,
+      totalPages: 1
     });
   } catch (error) {
-    logger.error('Server Error:', error);
-    res.status(500).json({ error: 'Server error', details: error.message });
+    res.status(500).json({ error: 'Failed to fetch events' });
   }
 };
+
 
 // Get all events with optional filtering
 exports.getAllEvents = async (req, res) => {

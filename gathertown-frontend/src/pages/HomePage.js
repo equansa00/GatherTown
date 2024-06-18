@@ -1,128 +1,153 @@
-// import React, { useState, useEffect, useCallback } from 'react';
-// import { useNavigate, useLocation } from 'react-router-dom';
-// import axios from 'axios';
-// import MapComponent from '../components/MapComponent';
-// import { initializeRsvpStatus, handleRsvp } from '../utils/rsvpUtils';
-// import '../features/events/AllEventsList.css';
-// import './HomePage.css';
+// src/components/HomePage.js
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import MapComponent from '../components/MapComponent';
+import { initializeRsvpStatus, handleRsvp } from '../utils/rsvpUtils';
+import '../features/events/AllEventsList.css';
+import './HomePage.css';
 
-// const HomePage = ({ userLocation, isLoading, setIsLoading, loadError, setLoadError }) => {
-//   const [events, setEvents] = useState([]);
-//   const [rsvpStatus, setRsvpStatus] = useState([]);
-//   const [hoveredEvent, setHoveredEvent] = useState(null);
-//   const [selectedEvent, setSelectedEvent] = useState(null);
-//   const location = useLocation();
-//   const navigate = useNavigate();
+const HomePage = ({ isLoading, setIsLoading, loadError, setLoadError }) => {
+  const [events, setEvents] = useState([]);
+  const [rsvpStatus, setRsvpStatus] = useState([]);
+  const [hoveredEvent, setHoveredEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [userLocation, setUserLocation] = useState({ lat: 0, lng: 0 });
+  const location = useLocation();
+  const navigate = useNavigate();
 
-//   const fetchEvents = useCallback(async () => {
-//     setIsLoading(true);
-//     try {
-//       const response = await axios.get('http://localhost:5000/api/events/random-nearby', {
-//         params: { latitude: userLocation.lat, longitude: userLocation.lng }
-//       });
-//       const fetchedEvents = response.data;
-//       setEvents(fetchedEvents);
-//       setRsvpStatus(initializeRsvpStatus(fetchedEvents));
-//       setIsLoading(false);
-//     } catch (error) {
-//       console.error('Error fetching events:', error);
-//       setLoadError('Failed to fetch events. Please try again later.');
-//       setIsLoading(false);
-//     }
-//   }, [userLocation, setIsLoading, setLoadError]);
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+    }
+  }, []);
 
-//   useEffect(() => {
-//     fetchEvents();
-//   }, [fetchEvents]);
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get('http://localhost:5000/api/events', {
+          params: { latitude: userLocation.lat, longitude: userLocation.lng }
+        });
+        const fetchedEvents = response.data.events;
+        setEvents(fetchedEvents);
+        setRsvpStatus(initializeRsvpStatus(fetchedEvents));
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        setLoadError('Failed to fetch events. Please try again later.');
+        setIsLoading(false);
+      }
+    };
 
-//   useEffect(() => {
-//     if (location.state && location.state.event) {
-//       const event = location.state.event;
-//       if (!events.some(e => e._id === event._id)) {
-//         setEvents(prevEvents => [event, ...prevEvents]);
-//         setRsvpStatus(initializeRsvpStatus([event, ...events]));
-//         setSelectedEvent(event);
-//       }
-//     }
-//   }, [location.state, events]);
+    if (userLocation.lat !== 0 && userLocation.lng !== 0) {
+      fetchEvents();
+    }
+  }, [userLocation, setIsLoading, setLoadError]);
 
-//   const handleEventClick = (event) => {
-//     setSelectedEvent(event);
-//     navigate(`/events/${event._id}`);
-//   };
+  useEffect(() => {
+    if (location.state && location.state.event) {
+      const event = location.state.event;
+      setEvents((prevEvents) => {
+        if (!prevEvents.some(e => e._id === event._id)) {
+          return [event, ...prevEvents];
+        }
+        return prevEvents;
+      });
+      setRsvpStatus(initializeRsvpStatus([event, ...events]));
+      setSelectedEvent(event);
+    }
+  }, [location.state, events]);
 
-//   const handleEventHover = (event) => {
-//     setHoveredEvent(event._id);
-//     setSelectedEvent(event);
-//   };
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    navigate(`/events/${event._id}`);
+  };
 
-//   const handleEventMouseLeave = () => {
-//     setHoveredEvent(null);
-//     setSelectedEvent(null);
-//   };
+  const handleEventHover = (event) => {
+    setHoveredEvent(event._id);
+    setSelectedEvent(event);
+  };
 
-//   const handleRSVP = async (eventId, e) => {
-//     e.stopPropagation();
-//     await handleRsvp(eventId, rsvpStatus, setRsvpStatus, (error) => {
-//       console.error('RSVP error:', error);
-//       alert('Failed to RSVP. Please try again later.');
-//     });
-//   };
+  const handleEventMouseLeave = () => {
+    setHoveredEvent(null);
+    setSelectedEvent(null);
+  };
 
-//   const center = (selectedEvent && selectedEvent.location && selectedEvent.location.coordinates) ? selectedEvent.location.coordinates : [userLocation.lng, userLocation.lat];
-//   const zoom = selectedEvent ? 15 : 12;
+  const handleRSVP = async (eventId, e) => {
+    e.stopPropagation();
+    await handleRsvp(eventId, rsvpStatus, setRsvpStatus, (error) => {
+      console.error('RSVP error:', error);
+      alert('Failed to RSVP. Please try again later.');
+    });
+  };
 
-//   return (
-//     <div className="outer-container">
-//       <header className="header">
-//         {/* ... your header content ... */}
-//       </header>
+  const center = (hoveredEvent && hoveredEvent.location && hoveredEvent.location.coordinates) ? hoveredEvent.location.coordinates : [userLocation.lng, userLocation.lat];
+  const zoom = hoveredEvent ? 15 : 12;
 
-//       <main className="main-content">
-//         <div className="events-column">
-//           <h1>Nearby Events</h1>
-//           {isLoading && <p>Loading...</p>}
-//           {loadError && <p>Error: {loadError}</p>}
-//           <div className="event-list">
-//             {events.map(event => (
-//               <div
-//                 key={event._id}
-//                 className={`event-item ${hoveredEvent === event._id ? 'expanded' : ''}`}
-//                 onMouseEnter={() => handleEventHover(event)}
-//                 onMouseLeave={handleEventMouseLeave}
-//               >
-//                 <h2 onClick={() => handleEventClick(event)}>{event.title}</h2>
-//                 <p>Date: {new Date(event.date).toLocaleDateString()}</p>
-//                 <p>Time: {new Date(event.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</p>
-//                 <p>{event.location?.city}, {event.location?.state}</p>
-//                 {hoveredEvent === event._id && (
-//                   <div className="event-details-overlay">
-//                     <p><strong>Description:</strong> {event.description}</p>
-//                     <p><strong>Category:</strong> {event.category}</p>
-//                     <p><strong>Street:</strong> {event.location?.street}</p>
-//                     <p><strong>Creator:</strong> {event.creator?.name}</p>
-//                     <p><strong>Attendees:</strong> {event.attendees?.length || 0}</p>
-//                     {event.images && event.images.map((image, index) => (
-//                       <img key={index} src={image} alt="Event" style={{ width: '100px', height: '100px' }} />
-//                     ))}
-//                     <button onClick={(e) => handleRSVP(event._id, e)}>
-//                       {rsvpStatus.find(status => status.id === event._id)?.isRSVPed ? '✔️ RSVPed' : 'RSVP'}
-//                     </button>
-//                   </div>
-//                 )}
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//         <div className="map-column">
-//           <MapComponent center={center} zoom={zoom} events={events} selectedEvent={selectedEvent} />
-//         </div>
-//       </main>
-//     </div>
-//   );
-// };
+  return (
+    <div className="outer-container">
+      <header className="header">
+        {/* ... your header content ... */}
+      </header>
 
-// export default HomePage;
+      <main className="main-content">
+        <div className="events-column">
+          <h1>Events</h1>
+          {isLoading && <p>Loading...</p>}
+          {loadError && <p>Error: {loadError}</p>}
+          <div className="event-list">
+            {events.map(event => (
+              <div
+                key={event._id}
+                className={`event-item ${hoveredEvent === event._id ? 'expanded' : ''}`}
+                onMouseEnter={() => handleEventHover(event)}
+                onMouseLeave={handleEventMouseLeave}
+              >
+                <h2 onClick={() => handleEventClick(event)}>{event.title}</h2>
+                <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+                <p>Time: {new Date(event.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</p>
+                <p>{event.location?.city}, {event.location?.state}</p>
+                {hoveredEvent === event._id && (
+                  <div className="event-details-overlay">
+                    <p><strong>Description:</strong> {event.description}</p>
+                    <p><strong>Category:</strong> {event.category}</p>
+                    <p><strong>Street:</strong> {event.location?.street}</p>
+                    <p><strong>Creator:</strong> {event.creator?.name}</p>
+                    <p><strong>Attendees:</strong> {event.attendees?.length || 0}</p>
+                    {event.images && event.images.map((image, index) => (
+                      <img key={index} src={image} alt="Event" style={{ width: '100px', height: '100px' }} />
+                    ))}
+                    <button onClick={(e) => handleRSVP(event._id, e)}>
+                      {rsvpStatus.find(status => status.id === event._id)?.isRSVPed ? '✔️ RSVPed' : 'RSVP'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="map-column">
+          <MapComponent center={center} zoom={zoom} events={events} selectedEvent={selectedEvent} />
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default HomePage;
+
+
 
 
 
@@ -194,7 +219,12 @@
 //   useEffect(() => {
 //     if (location.state && location.state.event) {
 //       const event = location.state.event;
-//       setEvents((prevEvents) => [event, ...prevEvents]);
+//       setEvents((prevEvents) => {
+//         if (!prevEvents.some(e => e._id === event._id)) {
+//           return [event, ...prevEvents];
+//         }
+//         return prevEvents;
+//       });
 //       setRsvpStatus(initializeRsvpStatus([event, ...events]));
 //       setSelectedEvent(event);
 //     }
@@ -223,8 +253,8 @@
 //     });
 //   };
 
-//   const center = (selectedEvent && selectedEvent.location && selectedEvent.location.coordinates) ? selectedEvent.location.coordinates : [userLocation.lng, userLocation.lat];
-//   const zoom = selectedEvent ? 15 : 12;
+//   const center = (hoveredEvent && hoveredEvent.location && hoveredEvent.location.coordinates) ? hoveredEvent.location.coordinates : [userLocation.lng, userLocation.lat];
+//   const zoom = hoveredEvent ? 15 : 12;
 
 //   return (
 //     <div className="outer-container">
@@ -277,161 +307,6 @@
 // };
 
 // export default HomePage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import MapComponent from '../components/MapComponent';
-import { initializeRsvpStatus, handleRsvp } from '../utils/rsvpUtils';
-import '../features/events/AllEventsList.css';
-import './HomePage.css';
-
-const HomePage = ({ userLocation, isLoading, setIsLoading, loadError, setLoadError }) => {
-  const [events, setEvents] = useState([]);
-  const [rsvpStatus, setRsvpStatus] = useState([]);
-  const [hoveredEvent, setHoveredEvent] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      try {
-        const response = await axios.get('http://localhost:5000/api/events/random-nearby', {
-          params: { latitude: userLocation.lat, longitude: userLocation.lng }
-        });
-        const fetchedEvents = response.data;
-        setEvents(fetchedEvents);
-        setRsvpStatus(initializeRsvpStatus(fetchedEvents));
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setLoadError('Failed to fetch events. Please try again later.');
-        setIsLoading(false);
-      }
-    };
-
-    if (events.length === 0) {
-      fetchEvents();
-    }
-  }, [userLocation, setIsLoading, setLoadError, events.length]);
-
-  useEffect(() => {
-    if (location.state && location.state.event) {
-      const event = location.state.event;
-      setEvents((prevEvents) => {
-        if (!prevEvents.some(e => e._id === event._id)) {
-          return [event, ...prevEvents];
-        }
-        return prevEvents;
-      });
-      setRsvpStatus(initializeRsvpStatus([event, ...events]));
-      setSelectedEvent(event);
-    }
-  }, [location.state, events]);
-
-  const handleEventClick = (event) => {
-    setSelectedEvent(event);
-    navigate(`/events/${event._id}`);
-  };
-
-  const handleEventHover = (event) => {
-    setHoveredEvent(event._id);
-    setSelectedEvent(event);
-  };
-
-  const handleEventMouseLeave = () => {
-    setHoveredEvent(null);
-    setSelectedEvent(null);
-  };
-
-  const handleRSVP = async (eventId, e) => {
-    e.stopPropagation();
-    await handleRsvp(eventId, rsvpStatus, setRsvpStatus, (error) => {
-      console.error('RSVP error:', error);
-      alert('Failed to RSVP. Please try again later.');
-    });
-  };
-
-  const center = (hoveredEvent && hoveredEvent.location && hoveredEvent.location.coordinates) ? hoveredEvent.location.coordinates : [userLocation.lng, userLocation.lat];
-  const zoom = hoveredEvent ? 15 : 12;
-
-  return (
-    <div className="outer-container">
-      <header className="header">
-        {/* ... your header content ... */}
-      </header>
-
-      <main className="main-content">
-        <div className="events-column">
-          <h1>Nearby Events</h1>
-          {isLoading && <p>Loading...</p>}
-          {loadError && <p>Error: {loadError}</p>}
-          <div className="event-list">
-            {events.map(event => (
-              <div
-                key={event._id}
-                className={`event-item ${hoveredEvent === event._id ? 'expanded' : ''}`}
-                onMouseEnter={() => handleEventHover(event)}
-                onMouseLeave={handleEventMouseLeave}
-              >
-                <h2 onClick={() => handleEventClick(event)}>{event.title}</h2>
-                <p>Date: {new Date(event.date).toLocaleDateString()}</p>
-                <p>Time: {new Date(event.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</p>
-                <p>{event.location?.city}, {event.location?.state}</p>
-                {hoveredEvent === event._id && (
-                  <div className="event-details-overlay">
-                    <p><strong>Description:</strong> {event.description}</p>
-                    <p><strong>Category:</strong> {event.category}</p>
-                    <p><strong>Street:</strong> {event.location?.street}</p>
-                    <p><strong>Creator:</strong> {event.creator?.name}</p>
-                    <p><strong>Attendees:</strong> {event.attendees?.length || 0}</p>
-                    {event.images && event.images.map((image, index) => (
-                      <img key={index} src={image} alt="Event" style={{ width: '100px', height: '100px' }} />
-                    ))}
-                    <button onClick={(e) => handleRSVP(event._id, e)}>
-                      {rsvpStatus.find(status => status.id === event._id)?.isRSVPed ? '✔️ RSVPed' : 'RSVP'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="map-column">
-          <MapComponent center={center} zoom={zoom} events={events} selectedEvent={selectedEvent} />
-        </div>
-      </main>
-    </div>
-  );
-};
-
-export default HomePage;
 
 
 

@@ -398,14 +398,14 @@ export const fetchRandomEvents = async (count = 5) => {
 };
 
 // Fetch Events with Parameters
-export const fetchEvents = async (params) => {
+export const fetchEvents = async (latitude, longitude) => {
   try {
-    logMessage(`Fetching events with params: ${JSON.stringify(params)}`);
-    const response = await axiosInstance.get('/events', { params });
-    logMessage(`Fetched ${response.data.events.length} events`);
+    const response = await axiosInstance.get('/events', {
+      params: { latitude, longitude }
+    });
     return response.data;
   } catch (error) {
-    logMessage(`Error fetching events: ${error.message}`);
+    console.error('Error fetching events:', error);
     throw error;
   }
 };

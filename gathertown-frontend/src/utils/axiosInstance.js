@@ -9,7 +9,6 @@ const axiosInstance = axios.create({
   },
 });
 
-// Adding interceptors for logging requests and responses
 axiosInstance.interceptors.request.use(
   (request) => {
     console.log('Request:', {
