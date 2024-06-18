@@ -1,5 +1,6 @@
-///home/equansa00/Desktop/GatherTown/gathertown-frontend/src/utils/axiosInstance.js
 import axios from 'axios';
+
+console.log("REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
 
 const axiosInstance = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
@@ -12,6 +13,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (request) => {
     console.log('Request:', {
+      baseURL: request.baseURL,
       url: request.url,
       method: request.method,
       headers: request.headers,
@@ -54,4 +56,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-
