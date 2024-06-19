@@ -1,11 +1,10 @@
-// backend/app.js
+// backend/server.js
+const express = require('express');
+const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const path = require('path');
-const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-const jwt = require('jsonwebtoken');
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const { connectDB } = require('./db');
