@@ -1,4 +1,4 @@
-// src/components/HomePage.js
+// HomePage.js
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -36,7 +36,7 @@ const HomePage = ({ isLoading, setIsLoading, loadError, setLoadError }) => {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/events', {
+        const response = await axios.get('/api/events', {
           params: { latitude: userLocation.lat, longitude: userLocation.lng }
         });
         const fetchedEvents = response.data.events;
@@ -146,6 +146,7 @@ const HomePage = ({ isLoading, setIsLoading, loadError, setLoadError }) => {
 };
 
 export default HomePage;
+
 
 
 

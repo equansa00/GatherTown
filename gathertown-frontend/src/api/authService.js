@@ -1,7 +1,7 @@
 // src/api/authService.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const setAuthHeader = (token) => {
   axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -58,39 +58,6 @@ export const refreshToken = async () => {
   }
 };
 
-// Function to fetch events
-export const fetchEvents = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/events`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    throw error;
-  }
-};
-
-// Function to get event details
-export const getEventDetails = async (id) => {
-  try {
-    const response = await axios.get(`${API_URL}/events/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching event details:', error);
-    throw error;
-  }
-};
-
-// Function to submit a new event
-export const submitEvent = async (eventData) => {
-  try {
-    const response = await axios.post(`${API_URL}/events`, eventData);
-    return response.data;
-  } catch (error) {
-    console.error('Error submitting event:', error);
-    throw error;
-  }
-};
-
 // Function for forgot password
 export const forgotPassword = async (email) => {
   try {
@@ -106,19 +73,7 @@ export const resetPassword = async (token, password) => {
   return await axios.post(`${API_URL}/reset-password/${token}`, { password });
 };
 
-// Function to fetch events nearby
-export const fetchEventsNearby = async ({ lat, lng }) => {
-  try {
-    const response = await axios.get(`${API_URL}/events/nearby`, {
-      params: { lat, lng },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching nearby events:', error);
-    throw error;
-  }
-};
-
+// Function to fetch user details
 export const fetchUser = async () => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('No token found');
@@ -137,4 +92,3 @@ export const fetchUser = async () => {
 
   return response.json();
 };
-

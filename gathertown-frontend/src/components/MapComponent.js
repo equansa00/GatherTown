@@ -75,20 +75,20 @@ const MapComponent = ({ center = [0, 0], zoom = 12, events = [], selectedEvent }
     console.log('Adding events to map:', events);
 
     events.forEach(event => {
-      if (event.location.coordinates && event.location.coordinates.length === 2) {
+      if (event.location && event.location.coordinates && event.location.coordinates.length === 2) {
         console.log('Adding marker for event:', event.title, 'at coordinates:', event.location.coordinates);
         new mapboxgl.Marker()
           .setLngLat(event.location.coordinates)
           .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(event.title))
           .addTo(map.current);
       } else {
-        console.error('Invalid event coordinates:', event.location.coordinates);
+        console.error('Invalid event coordinates:', event.location ? event.location.coordinates : 'undefined');
       }
     });
   }, [events]);
 
   useEffect(() => {
-    if (selectedEvent && map.current) {
+    if (selectedEvent && selectedEvent.location && selectedEvent.location.coordinates && map.current) {
       console.log('Flying to selected event:', selectedEvent.title, 'at coordinates:', selectedEvent.location.coordinates);
       map.current.flyTo({
         center: selectedEvent.location.coordinates,

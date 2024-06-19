@@ -5,6 +5,21 @@ const Event = require('../models/Event');
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/sendEmail');
 
+const { body, validationResult } = require('express-validator');
+
+app.post('/api/events', [
+  body('title').notEmpty().withMessage('Title is required'),
+  body('date').isDate().withMessage('Invalid date'),
+  // Add more validations as needed
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  // Proceed with event creation
+});
+
+
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };

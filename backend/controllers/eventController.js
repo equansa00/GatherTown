@@ -12,9 +12,23 @@ const { geocodeAddress } = require('../utils/geocode');
 // Helper functions
 const handleNotFound = (res, message) => res.status(404).json({ msg: message });
 const handleServerError = (res, error) => {
-  logger.error('Server Error:', error);
+  console.error('Server Error:', error);
   return res.status(500).json({ error: 'Server error', details: error.message });
 };
+
+const { body, validationResult } = require('express-validator');
+
+app.post('/api/events', [
+  body('title').notEmpty().withMessage('Title is required'),
+  body('date').isDate().withMessage('Invalid date'),
+  // Add more validations as needed
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  // Proceed with event creation
+});
 
 // Function to upload image
 const uploadImage = async (imagePath) => {
@@ -47,13 +61,12 @@ const buildFilter = (query) => {
   return filter;
 };
 
-/// Function to get both nearby and international events
 exports.getEvents = async (req, res) => {
   try {
     const { latitude, longitude, range = 10000 } = req.query;
 
     if (!latitude || !longitude) {
-      return res.status(400).json({ message: 'Latitude and longitude are required' });
+      return res.status(400).json({ status: 'error', message: 'Latitude and longitude are required' });
     }
 
     const nearbyEvents = await Event.find({
@@ -84,17 +97,22 @@ exports.getEvents = async (req, res) => {
 
     const events = [...nearbyEvents, ...internationalEvents];
 
-    res.status(200).json({
-      events,
-      totalEvents: events.length,
-      page: 0,
-      totalPages: 1
-    });
+    res.status(200).json({ status: 'success', data: events });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch events' });
+    res.status(500).json({ status: 'error', message: 'Failed to fetch events', error: error.message });
   }
 };
 
+exports.fetchEvents = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  try {
+    const events = await Event.find().skip((page - 1) * limit).limit(limit);
+    const totalEvents = await Event.countDocuments();
+    res.status(200).json({ status: 'success', data: events, totalEvents, page, totalPages: Math.ceil(totalEvents / limit) });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Failed to fetch events', error: error.message });
+  }
+};
 
 // Get all events with optional filtering
 exports.getAllEvents = async (req, res) => {
