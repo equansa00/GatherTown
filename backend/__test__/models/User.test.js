@@ -1,59 +1,91 @@
-// Importing required modules
+//home/equansa00/Downloads/GatherTown/backend/__test__/models/User.test.js
 const mongoose = require('mongoose');
 const User = require('../../models/User');
+const Event = require('../../models/Event');
+const logger = require('../../config/logger');
 
-// Test suite for User Model
-describe('User Model Test', () => {
-    // Before all tests, connect to the MongoDB database
-    beforeAll(async () => {
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+describe('User Model Indexes and Queries', () => {
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    await User.deleteMany({});
+    await Event.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await User.deleteMany({}); // Clear the User collection
+    await Event.deleteMany({}); // Clear the Event collection
+    await mongoose.connection.close();
+  });
+
+  it('should ensure indexes are created', async () => {
+    const indexes = await User.collection.getIndexes();
+    logger.info('Indexes:', indexes);
+    expect(indexes).toHaveProperty('username_1');
+    expect(indexes).toHaveProperty('email_1');
+  });
+
+  it('should create and query users based on interests', async () => {
+    const user = new User({
+      username: 'testuser',
+      email: 'testuser@example.com',
+      password: 'password123',
+      firstName: 'Test',
+      lastName: 'User',
+      interests: ['Music', 'Sports'],
     });
+    await user.save();
 
-    // Before each test, delete all users from the database
-    beforeEach(async () => {
-        await User.deleteMany({});
+    const usersWithInterest = await User.find({ interests: 'Music' });
+    logger.info('Queried users with interest in Music:', usersWithInterest);
+    expect(usersWithInterest.length).toBeGreaterThan(0);
+    expect(usersWithInterest[0].interests).toContain('Music');
+  });
+
+  it('should query users based on events attended', async () => {
+    const event = new Event({
+      title: 'Test Event',
+      description: 'This is a test event',
+      startDateTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // tomorrow
+      endDateTime: new Date(Date.now() + 25 * 60 * 60 * 1000), // 1 hour after start
+      date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      timezone: 'GMT',
+      location: {
+        type: 'Point',
+        coordinates: [-73.935242, 40.73061], // New York coordinates
+        addressLine1: '123 Main St',
+        street: 'Main St',
+        addressLine2: '',
+        city: 'New York',
+        state: 'NY',
+        country: 'United States of America',
+        postalCode: '12345',
+      },
+      category: 'Music',
+      subCategory: 'Rock',
+      tags: ['concert', 'rock'],
+      organizerInfo: 'Test Organizer',
+      capacity: 100,
+      rsvpCount: 0,
+      rsvpStatus: 'Pending',
+      status: 'Scheduled',
+      createdBy: new mongoose.Types.ObjectId(),
     });
+    await event.save();
 
-    // After all tests, disconnect from the MongoDB database
-    afterAll(async () => {
-        await mongoose.disconnect();
+    const user = new User({
+      username: 'testuser2',
+      email: 'testuser2@example.com',
+      password: 'password123',
+      firstName: 'Test',
+      lastName: 'User',
+      eventsAttended: [event._id],
     });
+    await user.save();
 
-    // Test case: Should create and save a user successfully
-    it('create & save user successfully', async () => {
-        const userData = { username: "newuser" + Date.now(), email: "test" + Date.now() + "@example.com", password: "password123" };
-        const validUser = new User(userData);
-        const savedUser = await validUser.save();
-
-        // Expectations: The saved user should have an _id, and its email, username, and password should match the input data
-        expect(savedUser._id).toBeDefined();
-        expect(savedUser.email).toBe(userData.email);
-        expect(savedUser.username).toBe(userData.username);
-        expect(savedUser.password).toBe(userData.password);
-    });
-
-    // Test case: Should insert a user successfully, but the field not defined in schema should be undefined
-    it('insert user successfully, but the field not defined in schema should be undefined', async () => {
-        const userWithInvalidField = new User({ username: "newuser" + Date.now(), email: "test" + Date.now() + "@example.com", password: "password123", nickname: "Nick" });
-        const savedUserWithInvalidField = await userWithInvalidField.save();
-
-        // Expectations: The saved user should have an _id, but the nickname field should be undefined
-        expect(savedUserWithInvalidField._id).toBeDefined();
-        expect(savedUserWithInvalidField.nickname).toBeUndefined();
-    });
-
-    // Test case: Should fail to create a user without required fields
-    it('create user without required field should fail', async () => {
-        const userData = { username: "newuser" + Date.now() }; // Missing email and password fields
-        try {
-            await new User(userData).save();
-        } catch (error) {
-            // Expectations: The error should be a validation error, and it should have an email field
-            expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-            expect(error.errors.email).toBeDefined();
-        }
-    });
+    const usersAttendingEvent = await User.find({ eventsAttended: event._id });
+    logger.info('Queried users who attended the event:', usersAttendingEvent);
+    expect(usersAttendingEvent.length).toBeGreaterThan(0);
+    expect(usersAttendingEvent[0].eventsAttended).toContainEqual(event._id);
+  });
 });
+

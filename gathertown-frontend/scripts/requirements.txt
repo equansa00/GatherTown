@@ -1,0 +1,8 @@
+pymongo
+tqdm
+mimesis
+python-dotenv
+cloudinary
+requests
+urllib3
+country_list

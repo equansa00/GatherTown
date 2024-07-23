@@ -1,3 +1,4 @@
+//backend/__test__/forgotPassword.test.js
 jest.mock('../utils/sendEmail', () => ({
     sendEmail: jest.fn(() => Promise.resolve({ messageId: 'testMessageId' }))
 }));

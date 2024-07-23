@@ -1,55 +1,103 @@
 const request = require('supertest');
 const app = require('../server');
 const User = require('../models/User');
-const bcrypt = require('bcryptjs'); // Import bcrypt to hash passwords
+const bcrypt = require('bcryptjs');
+const logger = require('../config/logger');
 
 describe('Login Integration Tests', () => {
-    const userData = {
-        username: 'testuser',
-        email: 'testuser@example.com',
-        password: 'password123'
-    };
+    let token;
+    let userData;
 
-    beforeEach(async () => {
-        await User.deleteMany({}); // Clear the user collection
+    beforeAll(async () => {
+        userData = {
+            username: `testuser_${Date.now()}`,
+            email: `test_${Date.now()}@example.com`,
+            password: 'password123',
+            firstName: 'Test',
+            lastName: 'User'
+        };
 
-        // Create and save the user as verified
-        const user = new User({
-            ...userData,
-            password: await bcrypt.hash(userData.password, 10), // Hash the password
-            verified: true // Set verified to true
-        });
-        await user.save();
+        logger.info('Starting user registration test with data:', userData);
 
-        console.log('User registered and verified:', {email: user.email, verified: user.verified});
+        // Clear the Users collection
+        await User.deleteMany({});
+        logger.info('Users collection cleared');
+
+        // Register a new user
+        const regResponse = await request(app)
+            .post('/api/users/register')
+            .send(userData)
+            .expect(201);
+
+        logger.info('Registration response:', regResponse.body);
+        expect(regResponse.body).toHaveProperty('token');
+
+        // Manually verify the user for the purpose of testing
+        await User.updateOne({ email: userData.email }, { $set: { verified: true } });
+        logger.info(`User ${userData.email} manually verified`);
+
+        // Wait to ensure the user verification is completed
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Log in the user
+        const loginResponse = await request(app)
+            .post('/api/users/login')
+            .send({
+                email: userData.email,
+                password: userData.password
+            })
+            .expect(200);
+
+        logger.info('Login response:', loginResponse.body);
+        expect(loginResponse.body).toHaveProperty('token');
+        token = loginResponse.body.token;
+    });
+
+    afterAll(async () => {
+        // Clean up the user from the database after tests
+        await User.deleteOne({ email: userData.email });
     });
 
     it('should login a user and return a JWT', async () => {
+        logger.info('Attempting to log in user:', userData.email);
         const response = await request(app)
             .post('/api/users/login')
             .send({
                 email: userData.email,
                 password: userData.password
             })
-            .expect(200); // Expecting HTTP 200 OK
+            .expect(200);
 
-        console.log('Login response:', response.body);
+        logger.info('Login response:', response.body);
         expect(response.body).toHaveProperty('token');
     });
 
     it('should not login an unverified user', async () => {
-        // Set user to unverified
-        await User.updateOne({ email: userData.email }, { verified: false });
+        // Clear the Users collection
+        await User.deleteMany({});
+        logger.info('Users collection cleared');
 
+        // Create and save an unverified user
+        const hashedPassword = await bcrypt.hash(userData.password, 10);
+        const user = new User({
+            ...userData,
+            password: hashedPassword,
+            verified: false
+        });
+        await user.save();
+
+        logger.info('User registered but unverified:', { email: user.email, verified: user.verified });
+
+        // Attempt to log in the unverified user
         const response = await request(app)
             .post('/api/users/login')
             .send({
                 email: userData.email,
                 password: userData.password
             })
-            .expect(401); // Expecting HTTP 401 Unauthorized
+            .expect(401);
 
-        console.log('Login attempt for unverified user:', response.body);
+        logger.info('Login attempt for unverified user:', response.body);
         expect(response.body).not.toHaveProperty('token');
     });
 });

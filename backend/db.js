@@ -1,3 +1,4 @@
+///home/equansa00/Downloads/GatherTown/backend/db.js
 require('dotenv').config(); // Load environment variables
 const mongoose = require('mongoose');
 

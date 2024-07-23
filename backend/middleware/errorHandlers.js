@@ -1,22 +1,30 @@
-// middleware/errorHandlers.js
+// backend/middleware/errorHandlers.js
+const logger = require('../config/logger');
 
 const handleErrors = (error, req, res, next) => {
-  console.error('Error:', error.message);
+  logger.error('Error:', {
+    message: error.message,
+    stack: error.stack,
+    name: error.name,
+    type: error.type,
+    errors: error.errors,
+  });
 
-  if (error.type === 'not-found') {
-    res.status(404).json({ msg: error.message });
+  if (error.name === 'ValidationError') {
+    const formattedErrors = Object.values(error.errors).map(err => ({
+      field: err.path,
+      message: err.message,
+    }));
+    return res.status(400).json({ errors: formattedErrors });
+  } else if (error.type === 'not-found') {
+    return res.status(404).json({ msg: error.message });
   } else if (error.type === 'unauthorized') {
-    res.status(401).json({ msg: error.message });
-  } else if (error.errors) { // Handle express-validator errors
-    res.status(400).json({ errors: error.errors });
+    return res.status(401).json({ msg: error.message });
+  } else if (error.errors) {
+    return res.status(400).json({ errors: error.errors });
   } else {
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 };
 
-const handleServerError = (res, error) => {
-  console.error('Server Error:', error);
-  res.status(500).json({ error: 'Server error', details: error.message });
-};
-
-module.exports = { handleServerError, handleErrors };
+module.exports = { handleErrors };

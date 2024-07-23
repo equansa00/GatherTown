@@ -1,4 +1,4 @@
-//backend/__test__/protectedRoutes.test.js
+// backend/__test__/protectedRoutes.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../server'); // Adjust the path to where your Express app is exported
@@ -19,8 +19,15 @@ describe('Protected route access', () => {
 
     beforeEach(async () => {
         await User.deleteMany({}); // Clear users collection before each test
-        const user = await User.create({ email: 'test@example.com', password: 'password', username: 'testuser' });
+        const user = await User.create({
+            email: 'test@example.com',
+            password: 'password',
+            username: 'testuser',
+            firstName: 'Test',
+            lastName: 'User'
+        });
         validToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        console.log('User created and token generated:', { email: user.email, token: validToken });
     });
 
     test('Access protected route with valid token', async () => {
@@ -28,6 +35,7 @@ describe('Protected route access', () => {
             .get('/api/users/protected_endpoint')
             .set('Authorization', `Bearer ${validToken}`);
 
+        console.log('Response for valid token:', response.body, response.status);
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('message');
     });
@@ -37,6 +45,7 @@ describe('Protected route access', () => {
             .get('/api/users/protected_endpoint')
             .set('Authorization', 'Bearer wrongtoken123');
 
+        console.log('Response for invalid token:', response.body, response.status);
         expect(response.status).toBe(401);
     });
 });

@@ -1,3 +1,5 @@
+// src/App.js
+
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
@@ -14,7 +16,8 @@ import Register from './features/auth/Register';
 import { AuthProvider } from './context/AuthContext';
 import EventDetailsPage from './pages/EventDetailsPage';
 import ProfilePage from './pages/ProfilePage';
-import UpdateEvent from './features/events/UpdateEvent'; // Import UpdateEvent component
+import UpdateEvent from './features/events/UpdateEvent';
+import EventFetcher from './components/EventFetcher';
 import './App.css';
 
 const App = () => {
@@ -78,8 +81,9 @@ const App = () => {
             <Route path="/login" element={<Login onLogin={setUser} />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/edit-event/:eventId" element={<UpdateEvent onUpdate={handleUpdateEvent} />} /> {/* Add route for updating event */}
+            <Route path="/edit-event/:eventId" element={<UpdateEvent onUpdate={handleUpdateEvent} />} />
           </Routes>
+          <EventFetcher />
           <Footer />
         </ErrorBoundary>
       </AuthProvider>
@@ -88,4 +92,5 @@ const App = () => {
 };
 
 export default App;
+
 

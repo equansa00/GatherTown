@@ -1,144 +1,158 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
 const app = require('../server');
-const Event = require('../models/Event');
 const User = require('../models/User');
+const Event = require('../models/Event');
+const logger = require('../config/logger');
 
 describe('Event API', () => {
-    let token, event;
+  let userId;
+  let token;
+  let savedEvent; // Store the created event
 
-    beforeAll(async () => {
-        await mongoose.connect(process.env.MONGO_URI);
+  beforeAll(async () => {
+    // Clear Existing Data
+    await User.deleteMany({});
+    await Event.deleteMany({});
 
-        // Clear existing users to ensure the environment is ready for tests
-        await User.deleteMany({});
-        await Event.deleteMany({});
+    // Register User
+    const userData = {
+      username: `testuser_${Date.now()}`,
+      email: `test_${Date.now()}@example.com`,
+      password: 'password123',
+      firstName: 'Test',
+      lastName: 'User'
+    };
+    const res = await request(app)
+      .post('/api/users/register')
+      .send(userData);
+    expect(res.status).toBe(201);
+    userId = res.body.user._id;
+    token = res.body.token; // Store authentication token for event creation
 
-        const user = await User.create({
-            username: 'testUser',
-            email: 'test@example.com',
-            password: 'password123', // Assume this is hashed according to your User model requirements
-            verified: true
-        });
+    // Force verify user
+    await User.updateOne({ email: userData.email }, { $set: { verified: true } });
 
-        // Generate a JWT token for the created user
-        token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Log user creation and token generation
+    logger.info('User created:', { userId });
+    logger.info('Token generated:', { token });
+  });
 
-        // Create an initial event to be used in tests
-        event = await Event.create({
-            title: 'Community Picnic',
-            description: 'A fun picnic with community members',
-            location: { type: 'Point', coordinates: [-73.968285, 40.785091] },
-            category: 'Recreation',
-            date: '2024-06-12',
-            time: '12:00',
-            creator: user._id
-        });
-    });
+  afterAll(async () => {
+    // Clean up
+    await User.deleteMany({});
+    await Event.deleteMany({});
+  });
 
-    afterAll(async () => {
-        await mongoose.disconnect();
-    });
+  // POST Test for creating a new event
+  it('POST /api/events - should create a new event', async () => {
+    const eventData = {
+      title: 'Test Event',
+      description: 'This is a test event',
+      startDateTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour in the future
+      endDateTime: new Date(Date.now() + 7200000).toISOString(),   // 2 hours in the future
+      date: new Date(Date.now() + 3600000).toISOString(),         // 1 hour in the future
+      timezone: 'America/New_York',
+      location: {
+        type: 'Point',
+        coordinates: [-73.935242, 40.73061],
+        addressLine1: '123 Main St',
+        street: 'Main St',
+        city: 'New York',
+        state: 'NY',
+        country: 'United States of America'  // Corrected country name
+      },
+      category: 'Tech',
+      subCategory: 'Conference',
+      tags: ['tech', 'conference'],
+      organizerInfo: 'Organizer Information',
+      capacity: 100,
+      time: '8:00 PM', // add time
+      createdBy: userId // Reference the created user's ID
+    };
 
-    describe('POST /api/events', () => {
-        describe('GET /api/events', () => {
-            it('GET /api/events - should retrieve all events', async () => {
-                const response = await request(app)
-                    .get('/api/events')
-                    .set('Authorization', `Bearer ${token}`);
-                expect(response.status).toBe(200);
-                expect(response.body.length).toBeGreaterThan(0); // Ensure events are retrieved
-            });
-        });
+    const eventResponse = await request(app)
+      .post('/api/events')
+      .set('Authorization', `Bearer ${token}`)
+      .send(eventData);
 
-        it('should create a new event', async () => {
-            const eventData = {
-                title: "Community Picnic",
-                description: "A fun picnic with community members",
-                location: {
-                    type: "Point",
-                    coordinates: [-73.968285, 40.785091]  // Example coordinates
-                },
-                category: "Recreation",
-                date: "2024-06-12",
-                time: "12:00"
-            };
+    // Log event creation response
+    logger.info('Event creation response:', { eventResponse: eventResponse.body });
 
-            // Log attempt to create a new event
-            console.log('Attempting to create a new event:', eventData);
+    expect(eventResponse.statusCode).toBe(201); // 201 Created
+    expect(eventResponse.body.event).toHaveProperty('title', 'Test Event');
 
-            // Execute the POST request to create a new event
-            const response = await request(app)
-                .post('/api/events')
-                .set('Authorization', `Bearer ${token}`) // Use the token for authentication
-                .send(eventData);
+    // Save the created event for use in later tests
+    savedEvent = eventResponse.body.event; 
+  });
 
-            // Log the response from the event creation attempt
-            console.log('Event creation response:', response.body);
+  // GET Test to retrieve events
+  it('GET /api/events - should retrieve all events', async () => {
+    const eventResponse = await request(app)
+      .get('/api/events');
 
-            // Assertions to validate the response
-            expect(response.status).toBe(201);  // Expecting a 201 Created response
-            expect(response.body).toHaveProperty('event');  // Check if response has 'event' property
-            expect(response.body.event).toHaveProperty('_id');  // Check if the event object has '_id'
-            expect(response.body.event.title).toEqual(eventData.title);
-            expect(response.body.event.description).toEqual(eventData.description);
-            expect(response.body.event.location).toEqual(eventData.location);
-            expect(new Date(response.body.event.date)).toEqual(new Date(eventData.date));  // Ensure dates match
-            expect(response.body.event.time).toEqual(eventData.time);  // Ensure times match
-        });
-    });
+    // Log event retrieval response
+    logger.info('Event retrieval response:', { statusCode: eventResponse.statusCode, body: eventResponse.body });
 
-    describe('PUT /api/events/:id', () => {
-        it('should update an existing event', async () => {
-            const updatedData = {
-                title: 'Updated Event Title',
-                description: 'Updated event description.',
-                location: {
-                    type: "Point",
-                    coordinates: [-73.968285, 40.785091]  // Example coordinates
-                },
-                category: "Recreation",
-                date: "2024-06-12",
-                time: "18:00"
-            };
+    expect(eventResponse.statusCode).toBe(200);
+    expect(eventResponse.body.events.length).toBeGreaterThanOrEqual(1); // At least one event should exist
+  });
 
-            const response = await request(app)
-                .put(`/api/events/${event._id}`)
-                .set('Authorization', `Bearer ${token}`)
-                .send(updatedData);
+  // PUT Test for updating events
+  it('PUT /api/events/:id - should update an existing event', async () => {
+    expect(savedEvent).toBeDefined(); // Ensure we have an event to update
+    logger.info('Event found for update:', { savedEvent }); // Log event id to be updated
 
-            // Log the response body for debugging
-            console.log('Event update response:', response.body);
+    // Corrected update data (ensure valid date formats)
+    const updatedEvent = {
+      title: 'Updated Test Event',
+      description: 'This is an updated test event',
+      startDateTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour in the future
+      endDateTime: new Date(Date.now() + 7200000).toISOString(),   // 2 hours in the future
+      date: new Date(Date.now() + 3600000).toISOString(),         // 1 hour in the future
+      timezone: 'America/New_York',
+      location: {
+        type: 'Point',
+        coordinates: [-73.935242, 40.73061],
+        addressLine1: '123 Main St',
+        street: 'Main St',
+        city: 'New York',
+        state: 'NY',
+        country: 'United States of America'  // Corrected country name
+      },
+      category: 'Tech',
+      subCategory: 'Conference',
+      tags: ['tech', 'conference'],
+      organizerInfo: 'Organizer Information',
+      capacity: 100,
+      time: '8:00 PM'
+    };
 
-            expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('_id');
-            expect(response.body.title).toEqual(updatedData.title);
-            expect(response.body.description).toEqual(updatedData.description);
-            expect(new Date(response.body.date)).toEqual(new Date(updatedData.date));  // Ensure dates match
-            expect(response.body.time).toEqual(updatedData.time);  // Ensure times match
-        });
-    });
+    const updateResponse = await request(app)
+      .put(`/api/events/${savedEvent._id}`) // Use the _id of the saved event
+      .set('Authorization', `Bearer ${token}`)
+      .send(updatedEvent);
 
-    describe('DELETE /api/events/:id', () => {
-        it('should delete an existing event', async () => {
-            const response = await request(app)
-                .delete(`/api/events/${event._id}`)
-                .set('Authorization', `Bearer ${token}`);
+    // Log event update response
+    logger.info('Event update response:', { statusCode: updateResponse.statusCode, body: updateResponse.body });
 
-            expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('msg', 'Event removed');
+    expect(updateResponse.statusCode).toBe(200); // 200 OK
+    expect(updateResponse.body.event.title).toBe('Updated Test Event');
+    expect(updateResponse.body.event.description).toBe('This is an updated test event');
+  });
 
-            const deletedEvent = await Event.findById(event._id);
-            expect(deletedEvent).toBeNull(); // Check if the event has been successfully removed
-        });
-    });
+  // DELETE Test for deleting events
+  it('DELETE /api/events/:id - should delete an existing event', async () => {
+    expect(savedEvent).toBeDefined(); // Ensure we have an event to delete
+    logger.info('Event found for deletion:', { savedEvent }); // Log event id to be deleted
+
+    const deleteResponse = await request(app)
+      .delete(`/api/events/${savedEvent._id}`) // Use the _id of the saved event
+      .set('Authorization', `Bearer ${token}`);
+
+    // Log event deletion response
+    logger.info('Event deletion response:', { statusCode: deleteResponse.statusCode, body: deleteResponse.body });
+
+    expect(deleteResponse.statusCode).toBe(200);
+    expect(deleteResponse.body).toHaveProperty('message', 'Event deleted successfully');
+  });
 });
-
-
-
-
-
-
-
-

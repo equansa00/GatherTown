@@ -1,150 +1,108 @@
-// backend/__test__/models/Event.test.js
 const mongoose = require('mongoose');
 const Event = require('../../models/Event');
-const { addDays } = require('date-fns');  // Use date-fns to manipulate dates
-
-// Connect to a specific test database
-beforeAll(async () => {
-    const uri = 'mongodb://localhost:27017/gathertownTest';  // Ensure this is your test database
-    await mongoose.connect(uri);
-    console.log('Connected to the test database');
-});
-
-// Clear the database after each test
-afterEach(async () => {
-    await Event.deleteMany();
-});
-
-// Disconnect from the database after all tests are done
-afterAll(async () => {
-    await mongoose.connection.close();
-});
 
 describe('Event Model', () => {
-    it('should create a new event with valid data', async () => {
-        const futureDate = addDays(new Date(), 10);  // Set the event date 10 days in the future
-        const eventData = {
-            title: 'Future Event',
-            description: 'This is a future event',
-            date: futureDate,
-            location: { type: 'Point', coordinates: [10, 20] },
-            category: 'Tech',
-            creator: new mongoose.Types.ObjectId(),
-            time: '14:00'
-        };
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+  });
 
-        const event = await Event.create(eventData);
-        expect(event).toHaveProperty('title', 'Future Event');
-        expect(event.date).toEqual(futureDate);
-    }, 10000);  // Increase timeout for this test
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
 
-    it('should not create an event without required fields', async () => {
-      try {
-          await Event.create({});
-      } catch (error) {
-          const errorKeys = Object.keys(error.errors);
-          expect(errorKeys).toContain('title');
-          expect(errorKeys).toContain('date');
-          expect(errorKeys).toContain('location.type');
-          expect(errorKeys).toContain('location.coordinates');
-          expect(errorKeys).toContain('category');
-          expect(errorKeys).toContain('creator');
-          expect(errorKeys).toContain('time');
-      }
-    }, 10000);  // Increase timeout for this test if necessary
-    
+  it('should create and save an event successfully', async () => {
+    const eventData = {
+      title: 'Test Event',
+      description: 'This is a test event',
+      startDateTime: new Date(Date.now() + 60 * 60 * 1000), // Ensure it's in the future
+      endDateTime: new Date(Date.now() + 2 * 60 * 60 * 1000),
+      date: new Date(), // Use Date type for consistency
+      timezone: 'America/New_York',
+      location: {
+        type: 'Point',
+        coordinates: [-73.935242, 40.73061],
+        addressLine1: '123 Test St',
+        street: 'Test Street',
+        city: 'New York',
+        state: 'NY',
+        country: 'United States of America' // Ensure this matches one of the country names
+      },
+      category: 'Concert',
+      subCategory: 'Music',
+      tags: ['Concert', 'Music', 'New York'],
+      organizerInfo: 'Test Organizer',
+      capacity: 100,
+      rsvpCount: 10,
+      images: ['https://example.com/image.jpg'],
+      status: 'Scheduled',
+      createdBy: new mongoose.Types.ObjectId()
+    };
+
+    const event = new Event(eventData);
+    const savedEvent = await event.save();
+
+    expect(savedEvent._id).toBeDefined();
+    expect(savedEvent.title).toBe(eventData.title);
+    // Add other expectations as needed
+  });
+
+  it('should fail to create an event without required fields', async () => {
+    const eventData = {
+      // Omitting required fields to test validation
+    };
+
+    let err;
+    try {
+      const event = new Event(eventData);
+      await event.save();
+    } catch (error) {
+      err = error;
+    }
+
+    expect(err).toBeDefined();
+    expect(err.errors.title).toBeDefined();
+    // Add other expectations as needed
+  });
+
+  it('should not allow creating an event with startDateTime in the past', async () => {
+    const eventData = {
+      title: 'Past Event',
+      description: 'This is a past event',
+      startDateTime: new Date(Date.now() - 60 * 60 * 1000), // Ensure it's in the past
+      endDateTime: new Date(),
+      date: new Date(), // Use Date type for consistency
+      timezone: 'America/New_York',
+      location: {
+        type: 'Point',
+        coordinates: [-73.935242, 40.73061],
+        addressLine1: '123 Test St',
+        street: 'Test Street',
+        city: 'New York',
+        state: 'NY',
+        country: 'United States of America' // Ensure this matches one of the country names
+      },
+      category: 'Concert',
+      subCategory: 'Music',
+      tags: ['Concert', 'Music', 'New York'],
+      organizerInfo: 'Test Organizer',
+      capacity: 100,
+      rsvpCount: 10,
+      images: ['https://example.com/image.jpg'],
+      status: 'Scheduled',
+      createdBy: new mongoose.Types.ObjectId()
+    };
+
+    let error;
+    try {
+      const event = new Event(eventData);
+      await event.save();
+    } catch (err) {
+      error = err;
+      console.error('Validation Error Details:', err); // Print the entire error object
+    }
+
+    expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+    expect(error.errors.startDateTime).toBeDefined();
+    expect(error.errors.startDateTime.message).toBe('Event start date and time must be in the future');
+  });
 });
-
-
-// //backend/__test__/models/Event.test.js
-// // Import required modules
-// const mongoose = require('mongoose');
-// const Event = require('../../models/Event');
-  
-// // Connect to the test database before running tests
-// beforeAll(async () => {
-//   console.log('Connecting to the test database...');
-//   await mongoose.connect('mongodb://localhost:27017/test', {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   });
-//   console.log('Connected to the test database');
-// });
-
-// // Clear the database after each test
-// afterEach(async () => {
-//   console.log('Clearing the test database...');
-//   await Event.deleteMany();
-//   console.log('Test database cleared');
-// });
-
-// // Close the database connection after all tests are done
-// afterAll(async () => {
-//   console.log('Closing the test database connection...');
-//   await mongoose.connection.close();
-//   console.log('Test database connection closed');
-// });
-
-// // Test suite for the Event model
-// describe('Event Model', () => {
-//     // Test case for creating a new event
-//     it('should create a new event', async () => {
-//         console.log('Testing event creation...');
-//         const eventData = {
-//           title: 'Test Event',
-//           description: 'This is a test event',
-//           date: new Date('2024-05-15T18:00:00Z'),
-//           location: { // Adjusted location property
-//             type: 'Point',
-//             coordinates: [10, 20],
-//           },
-//           category: 'Other', // Match one of the enum values
-//           creator: new mongoose.Types.ObjectId(),
-//           time: '12:00'
-//         };
-      
-//         console.log('Event data:', eventData);
-//         console.log('Location data:', eventData.location);
-      
-//         // Create the event
-//         const event = await Event.create(eventData);
-      
-//         console.log('Event created:', event);
-//         console.log('Event location:', event.location);
-      
-//         // Assert properties of the created event
-//         expect(event).toHaveProperty('title', 'Test Event');
-//         expect(event).toHaveProperty('description', 'This is a test event');
-//         expect(event).toHaveProperty('date', eventData.date);
-//         expect(event).toHaveProperty('location.type', 'Point'); // Adjusted to check location type
-//         expect(event).toHaveProperty('location.coordinates', [10, 20]); // Adjusted to check location coordinates
-//         expect(event).toHaveProperty('category', 'Other'); // Adjusted to match the enum value
-//         expect(event).toHaveProperty('creator', eventData.creator);
-//     }, 30000); // Increase timeout if needed
-    
-// // Test case for ensuring required fields are validated
-// it('should not create an event without required fields', async () => {
-//   console.log('Testing event creation without required fields...');
-//   try {
-//     // Attempt to create an event without required fields
-//     await Event.create({
-//       // Omit 'title' and 'time' to trigger validation errors
-//       description: 'This is another test event',
-//       date: new Date('2024-06-15T18:00:00Z'),
-//       location: {
-//         type: 'Point',
-//         coordinates: [15, 25],
-//       },
-//       category: 'Tech',
-//       creator: new mongoose.Types.ObjectId(),
-//     });
-//   } catch (error) {
-//     console.log('Error caught:', error);
-//     // Assert that the error is a validation error and contains errors for all required fields
-//     expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
-//     expect(error.errors).toHaveProperty('title'); // This field is missing and should trigger an error
-//     expect(error.errors).toHaveProperty('time');  // This field is missing and should trigger an error
-//   }
-// });
-
-// });

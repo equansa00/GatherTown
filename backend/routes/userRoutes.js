@@ -1,3 +1,4 @@
+// backend/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
@@ -14,7 +15,56 @@ router.get('/profile', authMiddleware, userController.getUserProfile);
 router.put('/profile', authMiddleware, userController.updateUserProfile);
 router.put('/change-password', authMiddleware, userController.changePassword);
 
+// Protected route for testing
+router.get('/protected_endpoint', authMiddleware, (req, res) => {
+    res.json({
+        message: "You have accessed a protected endpoint!",
+        user: req.user
+    });
+});
+
 module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ///home/equansa00/Downloads/GatherTown/backend/routes/userRoutes.js
+// const express = require('express');
+// const router = express.Router();
+// const userController = require('../controllers/userController');
+// const authMiddleware = require('../middleware/authMiddleware');
+
+// router.post('/register', userController.registerUser);
+// router.post('/login', userController.loginUser);
+// router.get('/verify-email/:token', userController.verifyEmail);
+// router.post('/forgot-password', userController.forgotPassword);
+// router.post('/reset-password/:token', userController.resetPassword);
+
+// // Profile-related routes
+// router.get('/profile', authMiddleware, userController.getUserProfile);
+// router.put('/profile', authMiddleware, userController.updateUserProfile);
+// router.put('/change-password', authMiddleware, userController.changePassword);
+
+// module.exports = router;
 
 
 
