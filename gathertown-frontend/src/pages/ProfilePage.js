@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUserProfile, updateUserProfile, changePassword } from '../api/userService';
+import { getUserProfile, updateUserProfile, changePassword } from '../services/profileService';
 import { deleteEvent } from '../api/eventsService';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -10,34 +10,54 @@ const ProfilePage = () => {
   const [editMode, setEditMode] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [profileForm, setProfileForm] = useState({ name: '', email: '' });
+  const [passwordChangeMessage, setPasswordChangeMessage] = useState('');
+  const [eventUpdateMessage, setEventUpdateMessage] = useState('');
+  const [eventDeleteMessage, setEventDeleteMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { user, createdEvents, rsvpedEvents } = await getUserProfile();
-      setUser(user);
-      setCreatedEvents(createdEvents);
-      setRsvpedEvents(rsvpedEvents);
-      setProfileForm({ name: user.name, email: user.email });
+      try {
+        const { user, createdEvents, rsvpedEvents } = await getUserProfile();
+        setUser(user);
+        setCreatedEvents(createdEvents);
+        setRsvpedEvents(rsvpedEvents);
+        setProfileForm({ name: user.firstName, email: user.email });
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
     };
     fetchProfile();
   }, []);
 
   const handleProfileUpdate = async () => {
-    const updatedUser = await updateUserProfile(profileForm);
-    setUser(updatedUser);
-    setEditMode(false);
+    try {
+      const updatedUser = await updateUserProfile(profileForm);
+      setUser(updatedUser);
+      setEditMode(false);
+      setEventUpdateMessage('Profile updated successfully');
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
   };
 
   const handleChangePassword = async () => {
-    await changePassword(passwordForm);
-    setPasswordForm({ currentPassword: '', newPassword: '' });
+    try {
+      const response = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      setPasswordForm({ currentPassword: '', newPassword: '' });
+      setPasswordChangeMessage(response.message); // Set the success message
+      alert('Password changed successfully. Please sign in again.');
+      navigate('/login'); // Redirect to login page
+    } catch (error) {
+      console.error('Failed to change password:', error);
+    }
   };
 
   const handleDeleteEvent = async (eventId) => {
     try {
       await deleteEvent(eventId);
       setCreatedEvents(createdEvents.filter(event => event._id !== eventId));
+      setEventDeleteMessage('Event deleted successfully');
     } catch (error) {
       console.error('Failed to delete event:', error);
       alert('Failed to delete event. Please try again later.');
@@ -67,11 +87,12 @@ const ProfilePage = () => {
           </>
         ) : (
           <>
-            <p>Name: {user.name}</p>
+            <p>Name: {user.firstName}</p>
             <p>Email: {user.email}</p>
             <button onClick={() => setEditMode(true)}>Edit</button>
           </>
         )}
+        {eventUpdateMessage && <p>{eventUpdateMessage}</p>} {/* Display the success message for profile update */}
       </div>
       <div className="change-password">
         <h2>Change Password</h2>
@@ -88,6 +109,7 @@ const ProfilePage = () => {
           placeholder="New Password"
         />
         <button onClick={handleChangePassword}>Change Password</button>
+        {passwordChangeMessage && <p>{passwordChangeMessage}</p>} {/* Display the success message */}
       </div>
       <div className="events-list">
         <h2>Events Created</h2>
@@ -100,6 +122,7 @@ const ProfilePage = () => {
             </li>
           ))}
         </ul>
+        {eventDeleteMessage && <p>{eventDeleteMessage}</p>} {/* Display the success message for event deletion */}
         <h2>Events RSVPed</h2>
         <ul>
           {rsvpedEvents.map(event => (
@@ -114,6 +137,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
-
-

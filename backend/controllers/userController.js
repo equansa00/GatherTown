@@ -2,16 +2,38 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+<<<<<<< HEAD
+=======
+const Event = require('../models/Event');
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/sendEmail');
 const { authenticateUser } = require('../utils/authUtils');
 const logger = require('../config/logger');
 
+const { body, validationResult } = require('express-validator');
+
+app.post('/api/events', [
+  body('title').notEmpty().withMessage('Title is required'),
+  body('date').isDate().withMessage('Invalid date'),
+  // Add more validations as needed
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  // Proceed with event creation
+});
+
+
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
-// Register User
+const generateRefreshToken = (userId) => {
+    return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+};
+
 exports.registerUser = async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
     logger.info('Registration Request:', { username, email, password, firstName, lastName });
@@ -44,9 +66,13 @@ exports.registerUser = async (req, res) => {
         logger.info('Saved User:', savedUser);
 
         const token = generateToken(savedUser._id.toString());
+<<<<<<< HEAD
         logger.info('Generated Token:', token);
+=======
+        const refreshToken = generateRefreshToken(savedUser._id.toString());
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 
-        res.status(201).json({ user: savedUser, token });
+        res.status(201).json({ user: savedUser, token, refreshToken });
     } catch (err) {
         logger.error('Registration error:', err);
         if (err.name === 'ValidationError') {
@@ -56,9 +82,9 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-// Login User
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
+<<<<<<< HEAD
     logger.info('Login Request:', { email, password });
 
     try {
@@ -70,11 +96,51 @@ exports.loginUser = async (req, res) => {
 
         const { token, user } = result;
         logger.info('Login Successful:', { token, user });
-
-        res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+=======
+  
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "No account found with that email. Please register." });
+      }
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+  
+      if (!user.verified) {
+        return res.status(403).json({ message: "Your account has not been verified." });
+      }
+  
+      const token = generateToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+  
+      res.json({ token, refreshToken, user: { id: user._id, username: user.username, email: user.email } });
     } catch (error) {
+      console.error(`Login error for ${email}:`, error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
+exports.refreshToken = async (req, res) => {
+    const { token } = req.body;
+    if (!token) {
+        return res.status(400).json({ message: 'Refresh token is required' });
+    }
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+        const newToken = generateToken(decoded.id);
+        res.json({ accessToken: newToken });
+    } catch (error) {
+<<<<<<< HEAD
         logger.error(`Login error for ${email}:`, error);
         res.status(500).json({ message: 'Server error' });
+=======
+        res.status(401).json({ message: 'Invalid refresh token' });
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
     }
 };
 

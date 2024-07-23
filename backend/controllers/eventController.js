@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 ///home/equansa00/Downloads/GatherTown/backend/controllers/eventController.js
+=======
+// /home/equansa00/Desktop/GatherTown/backend/controllers/eventController.js
+
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 const axios = require('axios');
 const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
@@ -12,10 +17,39 @@ const { validateEvent, handleValidationErrors } = require('../middleware/validat
 // Helper functions
 const handleNotFound = (res, message) => res.status(404).json({ msg: message });
 const handleServerError = (res, error) => {
-  logger.error('Server Error:', error);
+  console.error('Server Error:', error);
   return res.status(500).json({ error: 'Server error', details: error.message });
 };
 
+<<<<<<< HEAD
+=======
+const { body, validationResult } = require('express-validator');
+
+app.post('/api/events', [
+  body('title').notEmpty().withMessage('Title is required'),
+  body('date').isDate().withMessage('Invalid date'),
+  // Add more validations as needed
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  // Proceed with event creation
+});
+
+// Function to upload image
+const uploadImage = async (imagePath) => {
+  try {
+    const result = await cloudinary.uploader.upload(imagePath, {
+      folder: 'events',
+    });
+    return result.secure_url;
+  } catch (error) {
+    throw new Error('Image upload failed');
+  }
+};
+
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 const buildFilter = (query) => {
   const filter = {};
   if (query.title) {
@@ -31,38 +65,60 @@ const buildFilter = (query) => {
     if (query.startDate) filter.date.$gte = new Date(query.startDate);
     if (query.endDate) filter.date.$lte = new Date(query.endDate);
   }
-  logger.info(`Constructed filter: ${JSON.stringify(filter)}`); // Log the constructed filter for debugging
+  logger.info(`Constructed filter: ${JSON.stringify(filter)}`);
   return filter;
 };
 
 exports.getEvents = async (req, res) => {
-  const { page = 0, limit = 10 } = req.query;
-  const pageNum = parseInt(page, 10);
-  const limitNum = parseInt(limit, 10);
-
-  if (isNaN(pageNum) || isNaN(limitNum)) {
-    return res.status(400).json({ message: "Page and limit must be valid numbers" });
-  }
-
-  const filter = buildFilter(req.query);
-
   try {
-    logger.info(`Filter being used: ${JSON.stringify(filter)}`); // Log the filter to be used in the query
-    const events = await Event.find(filter).skip(pageNum * limitNum).limit(limitNum);
-    const totalEvents = await Event.countDocuments(filter);
+    const { latitude, longitude, range = 10000 } = req.query;
 
-    logger.info(`Events found: ${events.length}, Total events: ${totalEvents}`); // Log the number of events found
-    events.forEach(event => logger.info(`Event Title: ${event.title}`)); // Log the titles of found events
+    if (!latitude || !longitude) {
+      return res.status(400).json({ status: 'error', message: 'Latitude and longitude are required' });
+    }
 
-    res.status(200).json({
-      events,
-      totalEvents,
-      page: pageNum,
-      totalPages: Math.ceil(totalEvents / limitNum),
+    const nearbyEvents = await Event.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [longitude, latitude]
+          },
+          $maxDistance: range // Adjust the distance as needed
+        }
+      }
     });
+
+    const internationalEvents = await Event.find({
+      location: {
+        $not: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [longitude, latitude]
+            },
+            $maxDistance: range
+          }
+        }
+      }
+    });
+
+    const events = [...nearbyEvents, ...internationalEvents];
+
+    res.status(200).json({ status: 'success', data: events });
   } catch (error) {
-    logger.error('Server Error:', error);
-    res.status(500).json({ error: 'Server error', details: error.message });
+    res.status(500).json({ status: 'error', message: 'Failed to fetch events', error: error.message });
+  }
+};
+
+exports.fetchEvents = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  try {
+    const events = await Event.find().skip((page - 1) * limit).limit(limit);
+    const totalEvents = await Event.countDocuments();
+    res.status(200).json({ status: 'success', data: events, totalEvents, page, totalPages: Math.ceil(totalEvents / limit) });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Failed to fetch events', error: error.message });
   }
 };
 

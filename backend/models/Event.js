@@ -127,11 +127,21 @@ const eventSchema = new mongoose.Schema({
     required: true,
     ref: 'User'
   },
+<<<<<<< HEAD
   images: [String],
   status: {
     type: String,
     enum: ['Scheduled', 'Cancelled', 'Completed'],
     default: 'Scheduled'
+=======
+}, { timestamps: true });
+
+eventSchema.pre('save', function (next) {
+  if (this.isNew || this.isModified('date')) {
+    if (!isAfter(this.date, startOfDay(new Date()))) {
+      return next(new Error('Event date must be in the future'));
+    }
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
   }
 }, {
   timestamps: true

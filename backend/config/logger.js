@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // config/logger.js
+=======
+///home/equansa00/Desktop/GatherTown/backend/config/logger.js
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 const { createLogger, format, transports } = require('winston');
 
 const logger = createLogger({

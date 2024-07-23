@@ -10,11 +10,11 @@ router.get('/verify-email/:token', userController.verifyEmail);
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password/:token', userController.resetPassword);
 
-// Profile-related routes
 router.get('/profile', authMiddleware, userController.getUserProfile);
 router.put('/profile', authMiddleware, userController.updateUserProfile);
 router.put('/change-password', authMiddleware, userController.changePassword);
 
+<<<<<<< HEAD
 // Protected route for testing
 router.get('/protected_endpoint', authMiddleware, (req, res) => {
     res.json({
@@ -22,6 +22,9 @@ router.get('/protected_endpoint', authMiddleware, (req, res) => {
         user: req.user
     });
 });
+=======
+router.post('/refresh-token', userController.refreshToken);
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 
 module.exports = router;
 
@@ -31,6 +34,7 @@ module.exports = router;
 
 
 
+<<<<<<< HEAD
 
 
 
@@ -69,6 +73,8 @@ module.exports = router;
 
 
 
+=======
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 // const express = require('express');
 // const router = express.Router();
 // const userController = require('../controllers/userController');

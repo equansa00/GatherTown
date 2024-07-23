@@ -1,31 +1,57 @@
+// src/services/eventsService.js
 import axios from 'axios';
-import { getAuthHeader } from '../utils/auth';
+import axiosInstance from '../utils/axiosInstance';
+import { getAuthHeader, getToken } from '../utils/auth';
 
-// Logging functions
-const logMessage = (message) => {
-  console.log(`[eventsService] ${message}`);
+// Utility function for logging messages
+const logMessage = (message, data) => {
+  console.log(`[eventsService] ${message}`, data || '');
 };
 
-// Logging all requests and responses
-axios.interceptors.request.use(request => {
-  console.log(`Request: ${JSON.stringify(request, null, 2)}`);
+const logRequest = (request) => {
+  console.log('Request:', {
+    url: request.url,
+    method: request.method,
+    headers: request.headers,
+    params: request.params,
+    data: request.data,
+  });
   return request;
-});
+};
 
-axios.interceptors.response.use(response => {
-  console.log(`Response: ${JSON.stringify(response, null, 2)}`);
+const logResponse = (response) => {
+  console.log('Response:', {
+    url: response.config.url,
+    method: response.config.method,
+    status: response.status,
+    data: response.data,
+  });
   return response;
-}, error => {
-  console.log('Error:', error.response ? JSON.stringify(error.response, null, 2) : error.message);
-  return Promise.reject(error);
-});
+};
 
-const API_URL = 'http://localhost:5000/api/events';
+const logError = (error) => {
+  if (error.response) {
+    console.error('Error Response:', {
+      url: error.response.config.url,
+      method: error.response.config.method,
+      status: error.response.status,
+      data: error.response.data,
+    });
+  } else if (error.request) {
+    console.error('No Response Received:', error.request);
+  } else {
+    console.error('Request Error:', error.message);
+  }
+  return Promise.reject(error);
+};
+
+axios.interceptors.request.use(logRequest, logError);
+axios.interceptors.response.use(logResponse, logError);
 
 // Fetch Event by ID
 export const fetchEventById = async (eventId) => {
   try {
-    const response = await axios.get(`${API_URL}/${eventId}`);
+    const response = await axiosInstance.get(`/events/${eventId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching event by ID:', error);
@@ -33,10 +59,10 @@ export const fetchEventById = async (eventId) => {
   }
 };
 
-// Fetch Random Nearby Events
+// Fetch random nearby events
 export const fetchRandomNearbyEvents = async (lat, lng, radius = 5000, count = 5) => {
   try {
-    const response = await axios.get(`${API_URL}/random-nearby`, {
+    const response = await axiosInstance.get('/events/random-nearby', {
       params: { latitude: lat, longitude: lng, radius, count },
     });
     return response.data;
@@ -46,10 +72,10 @@ export const fetchRandomNearbyEvents = async (lat, lng, radius = 5000, count = 5
   }
 };
 
-// Fetch Random Events
+// Fetch random events
 export const fetchRandomEvents = async (count = 5) => {
   try {
-    const response = await axios.get(`${API_URL}/random`, { params: { count } });
+    const response = await axiosInstance.get('/events/random', { params: { count } });
     return response.data;
   } catch (error) {
     console.error('Error fetching random events:', error);
@@ -57,23 +83,12 @@ export const fetchRandomEvents = async (count = 5) => {
   }
 };
 
-// Fetch Events with Parameters
-export const fetchEvents = async (params) => {
+// Fetch events with parameters
+export const fetchEvents = async (latitude, longitude) => {
   try {
-    logMessage(`Fetching events with params: ${JSON.stringify(params)}`);
-    const response = await axios.get(API_URL, { params });
-    logMessage(`Fetched ${response.data.events.length} events`);
-    return response.data;
-  } catch (error) {
-    logMessage(`Error fetching events: ${error.message}`);
-    throw error;
-  }
-};
-
-// Fetch All Events
-export const fetchAllEvents = async (params) => {
-  try {
-    const response = await axios.get(API_URL, { params });
+    const response = await axiosInstance.get('/events', {
+      params: { latitude, longitude }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -81,12 +96,24 @@ export const fetchAllEvents = async (params) => {
   }
 };
 
+// Fetch all events
+export const fetchAllEvents = async (params) => {
+  try {
+    const response = await axiosInstance.get('/events', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    throw error;
+  }
+};
+
+// Fetch events by zip code
 export const fetchEventsByZip = async (zipCode, page = 1) => {
-  const url = `${API_URL}/events/by-zip`;
+  const url = '/events/by-zip';
   logMessage(`Fetching events by zip code: ${zipCode}, page: ${page}`);
   
   try {
-    const response = await axios.get(url, {
+    const response = await axiosInstance.get(url, {
       headers: getAuthHeader(),
       params: { zipCode, page }
     });
@@ -99,11 +126,11 @@ export const fetchEventsByZip = async (zipCode, page = 1) => {
   }
 };
 
-// Add Event
+// Add event
 export const addEvent = async (eventData) => {
   logMessage("Adding event:", eventData);
   try {
-    const response = await axios.post(API_URL, eventData, { headers: getAuthHeader() });
+    const response = await axiosInstance.post('/events', eventData, { headers: getAuthHeader() });
     logMessage('Event added successfully');
     return response.data;
   } catch (error) {
@@ -113,11 +140,11 @@ export const addEvent = async (eventData) => {
   }
 };
 
-// Get Event Details
+// Get event details
 export const getEventDetails = async (id) => {
   logMessage(`Fetching event details for ID: ${id}`);
   try {
-    const response = await axios.get(`${API_URL}/${id}`, { headers: getAuthHeader() });
+    const response = await axiosInstance.get(`/events/${id}`, { headers: getAuthHeader() });
     logMessage(`Event details fetched successfully`);
     return response.data;
   } catch (error) {
@@ -126,11 +153,11 @@ export const getEventDetails = async (id) => {
   }
 };
 
-// Update Event
+// Update event
 export const updateEvent = async (id, eventData) => {
   logMessage(`Updating event ID: ${id}`, eventData);
   try {
-    const response = await axios.put(`${API_URL}/${id}`, eventData, { headers: getAuthHeader() });
+    const response = await axiosInstance.put(`/events/${id}`, eventData, { headers: getAuthHeader() });
     logMessage('Event updated successfully');
     return response.data;
   } catch (error) {
@@ -140,22 +167,18 @@ export const updateEvent = async (id, eventData) => {
   }
 };
 
-// Delete Event
-export const deleteEvent = async (id) => {
-  logMessage(`Deleting event ID: ${id}`);
-  try {
-    const response = await axios.delete(`${API_URL}/${id}`, { headers: getAuthHeader() });
-    logMessage('Event deleted successfully');
-    return response.data;
-  } catch (error) {
-    logMessage('Error deleting event');
-    handleAxiosError(error);
-    throw error;
-  }
+// Delete event
+export const deleteEvent = async (eventId) => {
+  const response = await axiosInstance.delete(`/events/${eventId}`, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  return response.data;
 };
 
-// RSVP to Event
-export async function rsvpToEvent(eventId) {
+// RSVP to event
+export const rsvpToEvent = async (eventId) => {
   try {
     const response = await axios.post(`${API_URL}/${eventId}/rsvp`, {}, {
       headers: getAuthHeader() 
@@ -176,12 +199,12 @@ export async function rsvpToEvent(eventId) {
       throw error; // Re-throw for handling in the component
     }
   }
-}
+};
 
-// Fetch Categories
+// Fetch categories
 export const fetchCategories = async () => {
   try {
-    const response = await axios.get('/api/events/categories');
+    const response = await axiosInstance.get('/events/categories');
     return response.data;
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -189,18 +212,18 @@ export const fetchCategories = async () => {
   }
 };
 
-// Fetch Countries
+// Fetch countries
 export const fetchCountries = async () => {
   try {
-    const response = await axios.get('/api/events/countries');
+    const response = await axiosInstance.get('/events/countries');
     return response.data;
   } catch (error) {
     console.error('Error fetching countries:', error);
     throw error;
   }
-};
+}
 
-// Fetch States
+// Fetch states
 export const fetchStates = async (country) => {
   try {
     const response = await axios.get(`/api/events/states?country=${country}`);
@@ -211,7 +234,7 @@ export const fetchStates = async (country) => {
   }
 };
 
-// Fetch Cities
+// Fetch cities
 export const fetchCities = async (country, state) => {
   try {
     const response = await axios.get(`/api/events/cities?country=${country}&state=${state}`);
@@ -238,6 +261,8 @@ const handleAxiosError = (error) => {
 };
 
 export default {
+  fetchEventById,
+  fetchRandomNearbyEvents,
   fetchRandomEvents,
   fetchEvents,
   fetchAllEvents,

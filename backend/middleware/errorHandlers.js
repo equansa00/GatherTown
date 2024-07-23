@@ -1,6 +1,9 @@
 // backend/middleware/errorHandlers.js
+<<<<<<< HEAD
 const logger = require('../config/logger');
 
+=======
+>>>>>>> 85374fba8fb4aa7e203b91076159c587744234ae
 const handleErrors = (error, req, res, next) => {
   logger.error('Error:', {
     message: error.message,
